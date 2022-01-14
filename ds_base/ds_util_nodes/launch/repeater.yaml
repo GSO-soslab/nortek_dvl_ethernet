@@ -1,0 +1,20 @@
+repeater:
+  bidirectional: true
+  connection_1:
+#    type: "SERIAL"
+#    port: /dev/ttyUSB0
+#    baud: 9600
+#    data_bits: 8
+    type: "UDP"
+    udp_rx: 10002
+    udp_address: "127.0.0.1"
+    udp_tx: 10003
+  connection_2:
+#    type: "SERIAL"
+#    port: /dev/ttyUSB0
+#    baud: 9600
+#    data_bits: 8
+    type: "UDP"
+    udp_rx: 10003
+    udp_address: "127.0.0.1"
+    udp_tx: 10004

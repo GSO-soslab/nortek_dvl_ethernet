@@ -1,0 +1,13 @@
+<!--
+    Launch file for starting a sensor node
+    Example:
+        roslaunch ds_sensors sensor name:=my_maggie_node sensor:=aps1540
+-->
+<launch>
+    <arg name="name" doc="Name of the node"/>
+    <arg name="sensor" doc="Sensor name"/>
+    <node name="$(arg name)" pkg="ds_sensors" type="sensor" args="--sensor=$(arg sensor)" output="screen">
+        <param name="health_check_period" type="double" value="20"/>
+        <param name="message_timeout" type="double" value="10"/>
+    </node>
+</launch>

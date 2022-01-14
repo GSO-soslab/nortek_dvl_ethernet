@@ -1,0 +1,16 @@
+spitter_nortekdvl:
+  message: ""
+  interval_msec: 10000
+  connection:
+    type: "SERIAL"
+    port: /dev/ttyUSB0
+    baud: 9600
+    data_bits: 8
+#    matcher: passthrough
+    matcher: "match_header_read_length"
+    header: "C2"
+    length_location_bytes: 1
+    length_field_bytes: 1
+    is_msb_first: false
+    add_to_length: 0
+    max_length: 1000

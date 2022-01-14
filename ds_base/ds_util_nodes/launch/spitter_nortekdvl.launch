@@ -1,0 +1,5 @@
+<launch>
+    <rosparam command="load" file="$(find ds_util_nodes)/launch/spitter_nortekdvl.yaml"/>
+    <node name="spitter_nortekdvl" pkg="ds_util_nodes" type="spitter_node">
+    </node>
+</launch>

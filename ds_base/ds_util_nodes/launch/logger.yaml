@@ -1,0 +1,14 @@
+logger:
+  filename: "/home/jvaccaro/jason_integration/test_SVP.bin"
+  binary: true
+  timestamped: false
+  newline: false
+  connection:
+    type: "SERIAL"
+    port: /dev/ttyUSB0
+    baud: 9600
+    data_bits: 8
+#    type: "UDP"
+#    udp_rx: 10004
+#    udp_address: "127.0.0.1"
+#    udp_tx: 10001

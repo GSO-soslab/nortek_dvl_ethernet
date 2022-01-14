@@ -1,0 +1,14 @@
+<launch>
+    <test test-name="ds_process" pkg="ds_base" type="test_ds_process">
+
+        <param name="connection1/type" value="UDP" type="string"/>
+        <param name="connection1/udp_address" value="127.0.0.1" type="string"/>
+        <param name="connection1/udp_rx" value="6000" type="int"/>
+        <param name="connection1/udp_tx" value="6001" type="int"/>
+
+        <param name="connection2/type" value="UDP" type="string"/>
+        <param name="connection2/udp_address" value="127.0.0.1" type="string"/>
+        <param name="connection2/udp_rx" value="6000" type="int"/>
+        <param name="connection2/udp_tx" value="6001" type="int"/>
+    </test>
+</launch>

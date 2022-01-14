@@ -1,0 +1,17 @@
+<launch>
+    <group ns="demo">
+        <node name="ds_bus" pkg="ds_base" type="ds_bus">
+            <param name="descriptive_name" type="str" value="DCPWR BUS"/>
+            <param name="health_check_period" type="double" value="15"/>
+            <param name="message_timeout" type="double" value="5"/>
+            <param name="instrument/type" type="str" value="SERIAL"/>
+            <param name="instrument/port" type="str" value="/dev/ttyUSB0"/>
+            <param name="instrument/baud" value="9600"/>
+            <param name="instrument/data_bits" value="8"/>
+            <param name="instrument/parity" value="none"/>
+            <param name="instrument/stopbits" value="1"/>
+            <param name="instrument/matcher" value="match_char"/>
+            <param name="instrument/delimiter" value="0D"/>
+        </node>
+    </group>
+</launch>

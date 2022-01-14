@@ -1,0 +1,23 @@
+
+<launch>
+  <node name="shared_param_1" pkg="ds_param" type="ds_param_python_example">
+    <param name="test_enum_param" type="int" value="0"/>
+    <param name="test_int_param" type="int" value="1"/>
+    <param name="test_str_param" type="str" value="DEFAULT_1"/>
+    <param name="other_node" type="str" value="shared_param_2"/>
+    <param name="start_idx" type="int" value="100"/>
+    <param name="use_callback" type="bool" value="true"/>
+    <param name="test_atomic_bool" type="bool" value="false"/>
+    <param name="test_atomic_int" type="int" value="0"/>
+  </node>
+  <node name="shared_param_2" pkg="ds_param" type="ds_param_python_example">
+    <param name="test_enum_param" type="int" value="0"/>
+    <param name="test_int_param" type="int" value="2"/>
+    <param name="test_str_param" type="str" value="DEFAULT_2"/>
+    <param name="other_node" type="str" value="shared_param_1"/>
+    <param name="start_idx" type="int" value="200"/>
+    <param name="use_callback" type="bool" value="false"/>
+    <param name="test_atomic_bool" type="bool" value="false"/>
+    <param name="test_atomic_int" type="int" value="0"/>
+  </node>
+</launch>

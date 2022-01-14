@@ -1,0 +1,5 @@
+<launch>
+    <rosparam command="load" file="$(find ds_util_nodes)/launch/logger.yaml"/>
+    <node name="logger" pkg="ds_util_nodes" type="logger_node">
+    </node>
+</launch>

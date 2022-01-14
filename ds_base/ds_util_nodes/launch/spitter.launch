@@ -1,0 +1,5 @@
+<launch>
+    <rosparam command="load" file="$(find ds_util_nodes)/launch/spitter.yaml"/>
+    <node name="spitter" pkg="ds_util_nodes" type="spitter_node">
+    </node>
+</launch>

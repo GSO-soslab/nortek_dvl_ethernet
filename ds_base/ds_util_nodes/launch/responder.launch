@@ -1,0 +1,5 @@
+<launch>
+    <rosparam command="load" file="$(find ds_util_nodes)/launch/responder.yaml"/>
+    <node name="responder" pkg="ds_util_nodes" type="responder_node">
+    </node>
+</launch>

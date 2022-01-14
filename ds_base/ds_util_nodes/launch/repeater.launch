@@ -1,0 +1,5 @@
+<launch>
+    <rosparam command="load" file="$(find ds_util_nodes)/launch/repeater.yaml"/>
+    <node name="repeater" pkg="ds_util_nodes" type="repeater_node">
+    </node>
+</launch>

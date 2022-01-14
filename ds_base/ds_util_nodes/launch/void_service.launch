@@ -1,0 +1,5 @@
+<launch>
+    <node name="void_service" pkg="ds_util_nodes" type="void_service_node">
+        <param name="service" value="/sentry/goals/timed_joy/timed_joystick_command" type="str"/>
+    </node>
+</launch>

@@ -1,0 +1,20 @@
+<launch>
+    <group ns="rov">
+        <include file="$(find ds_sensors)/launch/sensor.launch">
+            <arg name="name" value="dvl"/>
+            <arg name="sensor" value="nortekdvl"/>
+        </include>
+        <group ns="dvl">
+            <param name="descriptive_name" type="str" value="Nortek DVL Node"/>
+            <param name="health_check_period" type="double" value="15"/>
+            <param name="message_timeout" type="double" value="5"/>
+            <param name="frame_id" type='str' value="nortek_dvl"/>
+            <group ns="instrument">
+                <param name="type" value="UDP" />
+                <param name="udp_rx" value="9005" />
+                <param name="udp_address" value="192.168.2.3" />
+                <param name="udp_tx" value="9001" />
+            </group>
+        </group>
+    </group>
+</launch>

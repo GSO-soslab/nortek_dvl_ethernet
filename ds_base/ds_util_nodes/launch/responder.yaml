@@ -1,0 +1,11 @@
+responder:
+  connection:
+#    type: "SERIAL"
+#    port: /dev/ttyUSB0
+#    baud: 9600
+#    data_bits: 8
+    type: "UDP"
+    udp_rx: 10002
+    udp_address: "127.0.0.1"
+    udp_tx: 10003
+  input_file: "/home/jvaccaro/micromodem_only_2019_11_21_17_13_26.dat"
