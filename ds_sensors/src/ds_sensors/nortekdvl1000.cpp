@@ -59,67 +59,83 @@ namespace ds_sensors
         return (delta.total_microseconds() / 1000000.0);
     }
 
-    void NortekDvl::msg_to_dvl(ds_sensor_msgs::Dvl* dvldata, double beam_angle, ds_sensor_msgs::NortekDF21* big_msg)
+    void NortekDvl::msg_to_dvl(ds_sensor_msgs::Dvl* dvl_data,
+                               geometry_msgs::TwistStamped* velocity_data,
+                               geometry_msgs::PointStamped* depth_data, 
+                               double beam_angle, ds_sensor_msgs::NortekDF21* big_msg)
     {
         /******************** Header ********************/
-        dvldata->header = big_msg->header; 
-        dvldata->ds_header = big_msg->ds_header; 
-        dvldata->dvl_time = big_msg->dvl_time;
+        dvl_data->header = big_msg->header; 
+        dvl_data->ds_header = big_msg->ds_header; 
+        dvl_data->dvl_time = big_msg->dvl_time;
 
         /******************** Setting ********************/
         // type
-        dvldata->dvl_type = ds_sensor_msgs::Dvl::DVL_TYPE_PISTON;
+        dvl_data->dvl_type = ds_sensor_msgs::Dvl::DVL_TYPE_PISTON;
         // velocity mode, Bottom tracking or Water tracking 
         if(big_msg->version == 1)
-            dvldata->velocity_mode = dvldata->DVL_MODE_BOTTOM;  
+            dvl_data->velocity_mode = dvl_data->DVL_MODE_BOTTOM;  
         else
-            dvldata->velocity_mode = dvldata->DVL_MODE_WATER;  
+            dvl_data->velocity_mode = dvl_data->DVL_MODE_WATER;  
         // coordinate, velocity in XYZ on DVL frame
-        dvldata->coordinate_mode = dvldata->DVL_COORD_INSTRUMENT;
+        dvl_data->coordinate_mode = dvl_data->DVL_COORD_INSTRUMENT;
 
         /******************** Data ********************/
         // fill in velocity and quality (FOM - measurement white noise level)
-        dvldata->velocity.x = big_msg->velX;
-        dvldata->velocity.y = big_msg->velY;
-        dvldata->quality.x = big_msg->fomX;
-        dvldata->quality.y = big_msg->fomY;
+        dvl_data->velocity.x = big_msg->velX;
+        dvl_data->velocity.y = big_msg->velY;
+        dvl_data->quality.x = big_msg->fomX;
+        dvl_data->quality.y = big_msg->fomY;
 
         if (big_msg->velZ1 == -32.768f && big_msg->velZ2 != -32.768f) {
-            dvldata->velocity.z = big_msg->velZ2;
-            dvldata->quality.z = big_msg->fomZ2;
+            dvl_data->velocity.z = big_msg->velZ2;
+            dvl_data->quality.z = big_msg->fomZ2;
         }
         else if (big_msg->velZ1 != -32.768f && big_msg->velZ2 == -32.768f){
-            dvldata->velocity.z = big_msg->velZ1;
-            dvldata->quality.z = big_msg->fomZ1;
+            dvl_data->velocity.z = big_msg->velZ1;
+            dvl_data->quality.z = big_msg->fomZ1;
         }
         else {
-            dvldata->velocity.z = (big_msg->velZ1 + big_msg->velZ2)/ 2.0;
-            dvldata->quality.z = (big_msg->fomZ1 + big_msg->fomZ2) / 2.0;
+            dvl_data->velocity.z = (big_msg->velZ1 + big_msg->velZ2)/ 2.0;
+            dvl_data->quality.z = (big_msg->fomZ1 + big_msg->fomZ2) / 2.0;
         }
 
         // range: convert vertical distance to range that from beam to target
-        dvldata->range[0] = big_msg->distBeam[0]  / cos(beam_angle);
-        dvldata->range[1] = big_msg->distBeam[1]  / cos(beam_angle);
-        dvldata->range[2] = big_msg->distBeam[2]  / cos(beam_angle);
-        dvldata->range[3] = big_msg->distBeam[3]  / cos(beam_angle);
+        dvl_data->range[0] = big_msg->distBeam[0]  / cos(beam_angle);
+        dvl_data->range[1] = big_msg->distBeam[1]  / cos(beam_angle);
+        dvl_data->range[2] = big_msg->distBeam[2]  / cos(beam_angle);
+        dvl_data->range[3] = big_msg->distBeam[3]  / cos(beam_angle);
 
         // average distance from DVL to the surface, maybe seafloor or lower ice surface 
-        dvldata->avg_altitude = big_msg->altitude_sum / big_msg->good_beams;
+        dvl_data->avg_altitude = big_msg->altitude_sum / big_msg->good_beams;
         
         // the vehicle speed
-        dvldata->speed_gnd = big_msg->speed_gnd;
-        dvldata->course_gnd = big_msg->course_gnd;
+        dvl_data->speed_gnd = big_msg->speed_gnd;
+        dvl_data->course_gnd = big_msg->course_gnd;
 
         /******************** Property ********************/
         // good beams
-        dvldata->num_good_beams = big_msg->good_beams;
+        dvl_data->num_good_beams = big_msg->good_beams;
 
         // will used for sound speed correction
-        dvldata->speed_sound = big_msg->speed_sound;
+        dvl_data->speed_sound = big_msg->speed_sound;
+        dvl_data->temperature = big_msg->temperature;
+    
+        /******************** Velocity data ********************/
+        velocity_data->header = dvl_data->header;
+        velocity_data->twist.linear.x = dvl_data->velocity.x;
+        velocity_data->twist.linear.y = dvl_data->velocity.y;
+        velocity_data->twist.linear.z = dvl_data->velocity.z;
+        
+        /******************** Depth data ********************/
+        depth_data->header = dvl_data->header;
+        depth_data->point.x = 0.0;
+        depth_data->point.y = 0.0;
+        depth_data->point.z = big_msg->pressure;
     }
 
-    void NortekDvl::msg_to_pointcloud(sensor_msgs::PointCloud2& pc2, double beam_angle,  
-                                      ds_sensor_msgs::NortekDF21* big_msg) {
+    void NortekDvl::msg_to_pointcloud(sensor_msgs::PointCloud2& pc2, 
+                                      double beam_angle, ds_sensor_msgs::NortekDF21* big_msg) {
 
         // setup the pointcloud for 4 points with only XYZ property
         sensor_msgs::PointCloud2Modifier modifier(pc2);
@@ -171,6 +187,14 @@ namespace ds_sensors
         //// TODO: is there any intensity from DVL points ?
     }
 
+    void NortekDvl::msg_to_depth(geometry_msgs::PointStamped* depth_data,
+                                 ds_sensor_msgs::NortekDF3* big_msg) {
+        /******************** Depth data ********************/
+        depth_data->header = big_msg->header;
+        depth_data->point.x = 0.0;
+        depth_data->point.y = 0.0;
+        depth_data->point.z = big_msg->pressure;
+    }
 
 ///*-----------------------------------------------------------------------------*///
 ///*   DATA CONVERSION PARSERS: generate DF21 from memory parsers                 *///
@@ -339,6 +363,8 @@ namespace ds_sensors
         // Bottom track
         d->df21_pub_ = nh.advertise<ds_sensor_msgs::NortekDF21>(ros::this_node::getName() + "/df21", 10);
         d->dvl_pub_ = nh.advertise<ds_sensor_msgs::Dvl>(ros::this_node::getName() + "/dvl", 10);
+        d->velocity_pub_ = nh.advertise<geometry_msgs::TwistStamped>(ros::this_node::getName() + "/velocity", 10);
+        d->depth_pub_ = nh.advertise<geometry_msgs::PointStamped>(ros::this_node::getName() + "/depth", 10);
         d->cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>(ros::this_node::getName() + "/pointcloud", 10);
 
         // current profile
@@ -379,16 +405,19 @@ namespace ds_sensors
 
             // encode derived DVL message for navigation application
             auto dvl = ds_sensor_msgs::Dvl{};
-            msg_to_dvl(&dvl, d->beam_angle, &df21);  
+            auto velocity = geometry_msgs::TwistStamped{};
+            auto depth = geometry_msgs::PointStamped{};
+            msg_to_dvl(&dvl, &velocity, &depth, d->beam_angle, &df21);  
 
             // encode derived pointcloud message for surface visualization or sensor fusion 
             auto cloud = sensor_msgs::PointCloud2{};
-            // sensor_msgs::PointCloud2 cloud;
             msg_to_pointcloud(cloud, d->beam_angle, &df21);
 
             // publish messages
             d->df21_pub_.publish(df21);
             d->dvl_pub_.publish(dvl);
+            d->velocity_pub_.publish(velocity);
+            d->depth_pub_.publish(depth);
             d->cloud_pub_.publish(cloud);
 
             break;
@@ -401,7 +430,11 @@ namespace ds_sensors
 
             FILL_SENSOR_HDR(df3, df3.header.stamp, bytes.ds_header.io_time);
 
+            auto depth = geometry_msgs::PointStamped{};
+            msg_to_depth(&depth, &df3);  
+
             d->df3_pub_.publish(df3);
+            d->depth_pub_.publish(depth);
             //// TODO: 1) frame_id; 2) send derived messages?
 
             break;

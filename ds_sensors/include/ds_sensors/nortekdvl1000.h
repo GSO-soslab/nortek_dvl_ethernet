@@ -50,6 +50,8 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/PointStamped.h>
 #include <Eigen/Dense>
 
 #include "../../src/ds_sensors/nortekdvl1000_structs.h"
@@ -73,8 +75,16 @@ namespace ds_sensors
         DS_DISABLE_COPY(NortekDvl)
 
         ///*   TOP FUNCTIONS: receive incoming raw data, create messages, and publish
-        static void msg_to_dvl(ds_sensor_msgs::Dvl* dvldata, double beam_angle, ds_sensor_msgs::NortekDF21* big_msg);
-        static void msg_to_pointcloud(sensor_msgs::PointCloud2& pc2, double beam_angle, ds_sensor_msgs::NortekDF21* big_msg);
+        static void msg_to_dvl(ds_sensor_msgs::Dvl* dvl_data, 
+                               geometry_msgs::TwistStamped* velocity_data, 
+                               geometry_msgs::PointStamped* depth_data,
+                               double beam_angle, ds_sensor_msgs::NortekDF21* big_msg);
+
+        static void msg_to_pointcloud(sensor_msgs::PointCloud2& pc2, 
+                                      double beam_angle, ds_sensor_msgs::NortekDF21* big_msg);
+
+        static void msg_to_depth(geometry_msgs::PointStamped* depth_data,
+                                 ds_sensor_msgs::NortekDF3* big_msg);
 
         /// added by lin
         static ds_sensors::nortekdvl_structs::parserID 

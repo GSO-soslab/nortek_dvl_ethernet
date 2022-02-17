@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   ds_nmea_parsers
   cmake_modules
   sensor_msgs
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -134,7 +135,7 @@ endif(CLANG_FORMAT_FOUND)
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ds_sensors
-   CATKIN_DEPENDS ds_base ds_hotel_msgs ds_sensor_msgs message_generation sensor_msgs
+   CATKIN_DEPENDS ds_base ds_hotel_msgs ds_sensor_msgs message_generation sensor_msgs geometry_msgs
    DEPENDS EIGEN3
 )
 

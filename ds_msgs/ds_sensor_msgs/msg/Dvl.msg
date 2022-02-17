@@ -47,4 +47,5 @@ float64 speed_gnd              # Calculated from xy velocities: speed_gnd = sqrt
 ########################################################################
 
 float32 speed_sound            # Speed of sound (m/s) used by the DVL
+float32 temperature            # DVL measured temperature
 uint8 num_good_beams           # only use data when all beams are good (num_good_beams = 4) ? 

@@ -40,6 +40,8 @@ namespace ds_sensors {
         // Bottom track
         ros::Publisher df21_pub_;
         ros::Publisher dvl_pub_;
+        ros::Publisher velocity_pub_;
+        ros::Publisher depth_pub_;
         ros::Publisher cloud_pub_;
         
         // Current profile
