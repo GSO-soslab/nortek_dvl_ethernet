@@ -584,7 +584,7 @@ namespace ds_sensors
         // different type of sensor data
         big_msg->speed_sound = cp.speed_sound*0.1;
         big_msg->temperature = cp.temperature*0.01;
-        big_msg->pressure    = cp.pressure*0.001;
+        big_msg->pressure    = cp.pressure*0.0001; //Bar
         // not inclued for this DVL
         big_msg->heading = cp.heading*0.01;
         big_msg->pitch   = cp.pitch*0.01;

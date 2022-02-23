@@ -31,7 +31,7 @@ uint8 seconds
 uint16 micro_seconds
 float32 speed_sound # [m/s]
 float32 temperature # [Degree Celsius]
-float32 pressure    # [dBar]
+float32 pressure    # [Bar]
 float32 heading     # [Degree]          
 float32 pitch       # [Degree]
 float32 roll        # [Degree]
