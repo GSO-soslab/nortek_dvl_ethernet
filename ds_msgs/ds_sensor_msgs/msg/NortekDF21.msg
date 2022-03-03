@@ -7,7 +7,6 @@ ds_core_msgs/DsHeader ds_header
 ################################
 # Standard DVL type disclaimer #
 ################################
-
 # Standard array with one piston transducer for each beam
 # If you have 4-5 individual disks on your DVL, use this one.
 # Examples include Sonardyne Syrinx, Nortek DVLs, and RDI Workhorse
@@ -25,7 +24,6 @@ uint8 dvl_type
 #################
 # processed data #
 #################
-
 uint8 good_beams
 float64 altitude_sum
 float64 dvl_time
@@ -40,7 +38,6 @@ float64 course_gnd
 ###################
 # Information Data #
 ###################
-
 uint8 version
 uint8 offsetOfData
 uint32 serialNumber
@@ -61,10 +58,9 @@ float32 pressure
 #############
 # Beam Data #
 #############
-
-float32[4] velBeam    #Velocities for each beam
-float32[4] distBeam   #Distances for each beam, vertical distance
-float32[4] fomBeam    #Figure of merit for each beam, Measure of the velocity white noise level 
+float32[4] velBeam        #Velocities for each beam
+float32[4] distBeam       #Distances for each beam, vertical distance
+float32[4] fomBeam        #Figure of merit for each beam, Measure of the velocity white noise level 
 float32[4] timeDiff1Beam  #DT1 for each beam
 float32[4] timeDiff2Beam  #DT2 for each beam
 float32[4] timeVelEstBeam #Duration of velocity estimate for each beam
@@ -72,14 +68,14 @@ float32[4] timeVelEstBeam #Duration of velocity estimate for each beam
 #############
 # XYZ Data #
 #############
-float32 velX  #Velocity X
-float32 velY  #Velocity Y
-float32 velZ1 #Velocity Z1
-float32 velZ2 #Velocity Z2
-float32 fomX  #Figure of Merit X
-float32 fomY  #Figure of Merit Y
-float32 fomZ1 #Figure of Merit Z1
-float32 fomZ2 #Figure of Merit Z2
+float32 velX          #Velocity X
+float32 velY          #Velocity Y
+float32 velZ1         #Velocity Z1
+float32 velZ2         #Velocity Z2
+float32 fomX          #Figure of Merit X
+float32 fomY          #Figure of Merit Y
+float32 fomZ1         #Figure of Merit Z1
+float32 fomZ2         #Figure of Merit Z2
 float32 timeDiff1X    #Time from trigger to center of bottom echo
 float32 timeDiff1Y    #Same as above
 float32 timeDiff1Z1   #Same as above

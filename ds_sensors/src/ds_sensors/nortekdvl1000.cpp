@@ -156,9 +156,8 @@ namespace ds_sensors
             Eigen::Vector3d pt;
             pt(0) = big_msg->distBeam[i]  * tan(beam_angle) * cos(beam_azimuth[i]);
             pt(1) = big_msg->distBeam[i]  * tan(beam_angle) * sin(beam_azimuth[i]);
-            pt(2) = big_msg->distBeam[i] ;
+            pt(2) = big_msg->distBeam[i];
             points.push_back(pt);
-            
         }
 
         // setup the points XYZ
@@ -415,6 +414,7 @@ namespace ds_sensors
 
             // publish messages
             d->df21_pub_.publish(df21);
+            
             d->dvl_pub_.publish(dvl);
             d->velocity_pub_.publish(velocity);
             d->depth_pub_.publish(depth);
