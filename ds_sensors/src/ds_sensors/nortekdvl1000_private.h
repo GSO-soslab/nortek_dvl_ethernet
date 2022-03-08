@@ -47,11 +47,13 @@ namespace ds_sensors {
         // Current profile
         ros::Publisher df3_pub_;
 
+        //// Parameters
         // beam angle in radians.  Probably 25 deg.
         double beam_angle;
-
         // max clock offset before we use I/O time instead of the dvl time
         double max_clock_offset;
+        // publish derived msg or not
+        bool pub_derived;
 
     };
 }  // ds_sensors

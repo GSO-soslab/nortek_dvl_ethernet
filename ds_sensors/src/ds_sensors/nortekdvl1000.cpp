@@ -108,7 +108,7 @@ namespace ds_sensors
 
         // average distance from DVL to the surface, maybe seafloor or lower ice surface 
         dvl_data->avg_altitude = big_msg->altitude_sum / big_msg->good_beams;
-        
+
         // the vehicle speed
         dvl_data->speed_gnd = big_msg->speed_gnd;
         dvl_data->course_gnd = big_msg->course_gnd;
@@ -205,11 +205,6 @@ namespace ds_sensors
 
         for (int i = 0; i < 4; i++)
         {
-            /***** Processed data *****/
-
-            if (bt.distBeam[i] != 0 && bt.velBeam[i] != -32.768f && bt.fomBeam[i] != 10)
-                big_msg->good_beams += 1;
-            big_msg->altitude_sum += big_msg->distBeam[i];
 
             /***** Beam Data *****/
 
@@ -219,6 +214,12 @@ namespace ds_sensors
             big_msg->timeDiff1Beam[i] = bt.timeDiff1Beam[i];
             big_msg->timeDiff2Beam[i] = bt.timeDiff2Beam[i];
             big_msg->timeVelEstBeam[i] = bt.timeVelEstBeam[i];
+
+            /***** Processed data *****/
+            if (bt.distBeam[i] != 0 && bt.velBeam[i] != -32.768f && bt.fomBeam[i] != 10){
+                big_msg->good_beams += 1;
+                big_msg->altitude_sum += big_msg->distBeam[i];
+            }
         }
 
         /***** information data *****/
@@ -359,15 +360,19 @@ namespace ds_sensors
         DS_D(NortekDvl);
         auto nh = nodeHandle();
         
-        // Bottom track
+        // Bottom track raw data
         d->df21_pub_ = nh.advertise<ds_sensor_msgs::NortekDF21>(ros::this_node::getName() + "/df21", 10);
-        d->dvl_pub_ = nh.advertise<ds_sensor_msgs::Dvl>(ros::this_node::getName() + "/dvl", 10);
-        d->velocity_pub_ = nh.advertise<geometry_msgs::TwistStamped>(ros::this_node::getName() + "/velocity", 10);
-        d->depth_pub_ = nh.advertise<geometry_msgs::PointStamped>(ros::this_node::getName() + "/depth", 10);
-        d->cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>(ros::this_node::getName() + "/pointcloud", 10);
 
-        // current profile
+        // Current Profile raw data
         d->df3_pub_ = nh.advertise<ds_sensor_msgs::NortekDF3>(ros::this_node::getName() + "/df3", 5);
+
+        // derived msg
+        if(d->pub_derived) {
+            d->dvl_pub_ = nh.advertise<ds_sensor_msgs::Dvl>(ros::this_node::getName() + "/dvl", 10);
+            d->velocity_pub_ = nh.advertise<geometry_msgs::TwistStamped>(ros::this_node::getName() + "/velocity", 10);
+            d->depth_pub_ = nh.advertise<geometry_msgs::PointStamped>(ros::this_node::getName() + "/depth", 10);
+            d->cloud_pub_ = nh.advertise<sensor_msgs::PointCloud2>(ros::this_node::getName() + "/pointcloud", 10);
+        }
 
     }
 
@@ -377,8 +382,10 @@ namespace ds_sensors
 
         DS_D(NortekDvl);
 
-        d->beam_angle = ros::param::param<double>("~/beam_angle_deg", 25) * M_PI / 180.0;
-        d->max_clock_offset = ros::param::param<double>("max_clock_offset", 0.5);
+        d->beam_angle = ros::param::param<double>("~beam_angle_deg", 25) * M_PI / 180.0;
+        d->max_clock_offset = ros::param::param<double>("~max_clock_offset", 0.5);
+
+        d->pub_derived = ros::param::param<bool>("~pub_derived", true);
     }
 ///*-----------------------------------------------------------------------------*///
 ///*   TOP FUNCTIONS: receive incoming raw data, create messages, and publish    *///
@@ -414,11 +421,13 @@ namespace ds_sensors
 
             // publish messages
             d->df21_pub_.publish(df21);
-            
-            d->dvl_pub_.publish(dvl);
-            d->velocity_pub_.publish(velocity);
-            d->depth_pub_.publish(depth);
-            d->cloud_pub_.publish(cloud);
+            // publish derived msg            
+            if(d->pub_derived) {
+                d->dvl_pub_.publish(dvl);
+                d->velocity_pub_.publish(velocity);
+                d->depth_pub_.publish(depth);
+                d->cloud_pub_.publish(cloud);
+            }
 
             break;
         }
@@ -433,9 +442,12 @@ namespace ds_sensors
             auto depth = geometry_msgs::PointStamped{};
             msg_to_depth(&depth, &df3);  
 
+            // pub CP raw
             d->df3_pub_.publish(df3);
-            d->depth_pub_.publish(depth);
-            //// TODO: 1) frame_id; 2) send derived messages?
+            // pub CP derived
+            if(d->pub_derived) {
+                d->depth_pub_.publish(depth);
+            }
 
             break;
         }
