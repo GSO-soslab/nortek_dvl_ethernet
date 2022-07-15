@@ -7,8 +7,9 @@
         <group ns="dvl">
             <param name="descriptive_name" type="str" value="Nortek DVL Node"/>
             <param name="health_check_period" type="double" value="15"/>
-            <param name="message_timeout" type="double" value="5"/>
-            <param name="frame_id" type='str' value="nortek_dvl"/>
+            <param name="message_timeout"     type="double" value="5"/>
+            <param name="frame_id"            type='str'    value="nortek_dvl"/>
+	    <param name="pub_derived"         type='bool'   value="true"/>
             <group ns="instrument">
                 <param name="type" value="UDP" />
                 <param name="udp_rx" value="9005" />
