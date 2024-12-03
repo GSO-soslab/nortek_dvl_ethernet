@@ -1,0 +1,4 @@
+UDP:
+  udp_rx: 9004
+  udp_address: 192.168.2.110
+  buffer_size: 512

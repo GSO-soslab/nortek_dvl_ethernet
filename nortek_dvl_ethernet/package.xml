@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>nortek_dvl_ethernet</name>
+  <version>0.0.0</version>
+  <description>The nortek_dvl_ethernet package</description>
+
+  <maintainer email="linzhao@uri.edu">Lin Zhao</maintainer>
+  <author email="linzhao@uri.edu">Lin Zhao</author>
+
+  <license>GPLv3</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>message_runtime</depend>
+
+</package>
