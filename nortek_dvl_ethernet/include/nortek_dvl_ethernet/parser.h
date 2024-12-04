@@ -30,7 +30,7 @@
 #include <chrono>
 #include <iomanip>
 #include <nortek_dvl_ethernet/nortekdvl1000_structs.h>
-#include <nortek_dvl_ethernet/NortekDF21.h>
+#include <nortek_dvl_ethernet/NortekDF2.h>
 #include <nortek_dvl_ethernet/NortekDF3.h>
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -39,9 +39,11 @@ class NortekDVLParser
 {
 private:
 
-    std::function <void(const nortek_dvl_ethernet::NortekDF21&)> df21_callback_;
+    std::function <void(const nortek_dvl_ethernet::NortekDF2&)> bottom_track_callback_;
 
-    std::function <void(const nortek_dvl_ethernet::NortekDF3&)> df3_callback_;
+    std::function <void(const nortek_dvl_ethernet::NortekDF2&)> water_track_callback_;
+
+    std::function <void(const nortek_dvl_ethernet::NortekDF3&)> current_profile_callback_;
 
     bool Checksum(uint16_t length, const uint8_t* buffer);
 
@@ -50,11 +52,11 @@ private:
         const size_t& buffer_size, 
         uint8_t& length);
 
-    void ParseBottomTrack(
+    void ParseTrack(
         const uint8_t* buffer, 
         uint8_t& length, 
         const double io_time, 
-        nortek_dvl_ethernet::NortekDF21* df21_msg);
+        nortek_dvl_ethernet::NortekDF2* df2_msg);
 
     void ParseCurrentProfile(
         const uint8_t* buffer, 
@@ -62,14 +64,14 @@ private:
         const double io_time, 
         nortek_dvl_ethernet::NortekDF3* df3_msg);
 
-    void ToDF21(
+    void ToDF2(
         const double io_time, 
-        const nortek_dvl_structs::bottomtrack& bt, 
-        nortek_dvl_ethernet::NortekDF21* df21_msg);    
+        const nortek_dvl_structs::TrackData& data, 
+        nortek_dvl_ethernet::NortekDF2* df2_msg);    
 
     void ToDF3(
         const double io_time, 
-        const nortek_dvl_structs::currentprofile& cp, 
+        const nortek_dvl_structs::ProfileData& data, 
         nortek_dvl_ethernet::NortekDF3* df3_msg);  
 
 public:
@@ -80,9 +82,11 @@ public:
         std::size_t size,
         const double io_time);
 
-    void SetDF21Callback(decltype(df21_callback_) cb) { df21_callback_  = cb;}
+    void SetCallbackBT(decltype(bottom_track_callback_) cb) { bottom_track_callback_  = cb;}
 
-    void SetDF3Callback(decltype(df3_callback_) cb) { df3_callback_  = cb;}
+    void SetCallbackWT(decltype(water_track_callback_) cb) { water_track_callback_  = cb;}
+
+    void SetCallbackCP(decltype(current_profile_callback_) cb) { current_profile_callback_  = cb;}
 };
 
 #endif // NORTEK_DVL_ETHERNET_PARSER_H_

@@ -18,7 +18,7 @@ uint8 DVL_TYPE_PHASED_ARRAY=1
 uint8 dvl_type
 uint8 version
 uint8 data_offset
-nortek_dvl_ethernet/NortekCPConfig configuration
+nortek_dvl_ethernet/NortekProfileConfig configuration
 uint32 serial_number
 
 ###################
@@ -37,7 +37,7 @@ float32 pressure    # [Bar]
 float32 heading     # [Degree]          
 float32 pitch       # [Degree]
 float32 roll        # [Degree]
-nortek_dvl_ethernet/NortekCPBeam beam_system
+nortek_dvl_ethernet/NortekProfileBeam beam_system
 float32 cell_size    # [m]
 float32 blanking     # [m]
 uint8 nominal_correlation # [%]
@@ -46,18 +46,18 @@ float32 battery       # [Voltage]
 int16[3] mag3D
 int16[3] acc3D        #[16384 = 1.0]
 float32 ambVelocity   # [m/s]
-nortek_dvl_ethernet/NortekCPDataset dataset_description
+nortek_dvl_ethernet/NortekProfileDataset dataset_description
 uint16 transmit_energy
 int8 velocity_scale
 float32 power_level   #[dB]
 int16 mag_temperature #[uncalibrated]
 int16 rtc_temperature #[Degree Celsius]
 uint16 error
-nortek_dvl_ethernet/NortekCPStatus0 status0
-nortek_dvl_ethernet/NortekCPStatus status
+nortek_dvl_ethernet/NortekProfileStatus0 status0
+nortek_dvl_ethernet/NortekProfileStatus status
 uint32 ensemble_counter
 
 ###################
 ### Cell Data ###
 ###################
-nortek_dvl_ethernet/NortekCPCell[] cells
+nortek_dvl_ethernet/NortekProfileCell[] cells

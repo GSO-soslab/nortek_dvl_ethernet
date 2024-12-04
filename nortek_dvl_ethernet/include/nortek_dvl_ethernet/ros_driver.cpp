@@ -57,9 +57,11 @@ void NortekDvlRos::LoadParam()
 
 void NortekDvlRos::SetupRos()
 {
-    df21_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF21>("DF21", 10);
+    bottom_track_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF2>("bottom_track", 10);
 
-    df3_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF3>("DF3", 10);
+    water_track_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF2>("water_track", 10);
+
+    current_profile_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF3>("current_profile", 10);
 
     test_sub_ = nh_.subscribe("test_data_sub", 10, &NortekDvlRos::CallbackTest, this);
 }
@@ -76,31 +78,42 @@ void NortekDvlRos::InitDataInterface()
     // Set up callback for parsed data (bottom track, current profile, water track)
     parser_ = std::make_shared<NortekDVLParser>();  
 
-    parser_->SetDF21Callback(
-        std::bind(&NortekDvlRos::CallbackDF21, this, std::placeholders::_1)
+    parser_->SetCallbackBT(
+        std::bind(&NortekDvlRos::CallbackBT, this, std::placeholders::_1)
     );
 
-    parser_->SetDF3Callback(
-        std::bind(&NortekDvlRos::CallbackDF3, this, std::placeholders::_1)
+    parser_->SetCallbackWT(
+        std::bind(&NortekDvlRos::CallbackWT, this, std::placeholders::_1)
+    );
+
+    parser_->SetCallbackCP(
+        std::bind(&NortekDvlRos::CallbackCP, this, std::placeholders::_1)
     );    
 }
 
-void NortekDvlRos::CallbackDF21(const nortek_dvl_ethernet::NortekDF21& df21)
+void NortekDvlRos::CallbackBT(const nortek_dvl_ethernet::NortekDF2& msg)
 {
-    nortek_dvl_ethernet::NortekDF21 df21_msg = df21;
+    nortek_dvl_ethernet::NortekDF2 bt_msg = msg;
     //! TODO: add param
-    df21_msg.header.frame_id = "nortek_dvl";
-    df21_pub_.publish(df21_msg);
+    bt_msg.header.frame_id = "nortek_dvl";
+    bottom_track_pub_.publish(bt_msg);
 }
 
-void NortekDvlRos::CallbackDF3(const nortek_dvl_ethernet::NortekDF3& df3)
+void NortekDvlRos::CallbackWT(const nortek_dvl_ethernet::NortekDF2& msg)
 {
-    nortek_dvl_ethernet::NortekDF3 df3_msg = df3;
+    nortek_dvl_ethernet::NortekDF2 wt_msg = msg;
     //! TODO: add param
-    df3_msg.header.frame_id = "nortek_dvl";
-    df3_pub_.publish(df3_msg);
+    wt_msg.header.frame_id = "nortek_dvl";
+    water_track_pub_.publish(wt_msg);
 }
 
+void NortekDvlRos::CallbackCP(const nortek_dvl_ethernet::NortekDF3& msg)
+{
+    nortek_dvl_ethernet::NortekDF3 cp_msg = msg;
+    //! TODO: add param
+    cp_msg.header.frame_id = "nortek_dvl";
+    current_profile_pub_.publish(cp_msg);
+}
 
 void NortekDvlRos::CallbackUDP(const uint8_t* data, std::size_t size) {
 

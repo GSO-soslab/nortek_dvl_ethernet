@@ -437,6 +437,8 @@ namespace ds_sensors
 
             parseCurrentProfile(bytes, length, d->max_clock_offset, &df3);
 
+            parseCurrentProfileTest(bytes, length);
+
             FILL_SENSOR_HDR(df3, df3.header.stamp, bytes.ds_header.io_time);
 
             auto depth = geometry_msgs::PointStamped{};
@@ -534,6 +536,105 @@ namespace ds_sensors
         // convert parse struct into ros message 
         NortekDvl::bt_to_msg(bytes.ds_header.io_time, max_clock_offset, *bt, big_msg);
 
+    }
+
+    // Helper function to allocate memory for the struct + dynamic arrays
+    nortekdvl_structs::cellTest* NortekDvl::allocateCell(int size) {
+        size_t struct_size = sizeof(nortekdvl_structs::cellTest) + 4 * size * (sizeof(int16_t) + 2 * sizeof(uint8_t));
+
+        // Allocate memory for the struct and the arrays
+        auto* cell = reinterpret_cast<nortekdvl_structs::cellTest*>(new uint8_t[struct_size]);
+
+        return cell;
+    }
+
+    // Function to parse a buffer into the struct
+    nortekdvl_structs::cellTest* NortekDvl::parseBuffer(const uint8_t* buffer, int size) {
+        // Allocate memory for the struct + dynamic arrays
+        nortekdvl_structs::cellTest* cell = allocateCell(size);
+
+        // Calculate offsets within the buffer
+        size_t velDataSize = 4 * size * sizeof(int16_t);
+        size_t ampDataSize = 4 * size * sizeof(uint8_t);
+        size_t corDataSize = 4 * size * sizeof(uint8_t);
+
+        // Copy data from the buffer into the struct's arrays
+        memcpy(cell->velData, buffer, velDataSize);
+        memcpy(cell->ampData, buffer + velDataSize, ampDataSize);
+        memcpy(cell->corData, buffer + velDataSize + ampDataSize, corDataSize);
+
+        return cell;
+    }
+
+    void NortekDvl::parseCurrentProfileTest(const ds_core_msgs::RawData& bytes, uint8_t length) {
+
+        // parse buffer to current profile
+        const uint8_t* buffer = bytes.data.data();
+        auto payload = buffer + length;
+        auto *cp = reinterpret_cast<const nortekdvl_structs::currentprofileTest*>(payload);
+
+        // parse the cell data
+        int cp_base_size = sizeof(ds_sensors::nortekdvl_structs::currentprofileTest);
+
+        auto cell_payload = buffer + length + cp_base_size;
+        nortekdvl_structs::cellTest* cell = NortekDvl::parseBuffer(cell_payload, cp->beam_system.num_cells);
+
+        // print first cell
+        auto scale = static_cast<int>(cp->velocityScaling);
+        double scale_factor  = pow(10, scale);
+
+        printf("Test: CP base - version:%d, ensembleCounter:%d, scale_factor:%f\n", 
+            cp->version, cp->ensembleCounter, scale_factor);
+
+        printf("Test: cell-first\n");
+        if(cp->configuration.velIncluded) {
+            auto v_x  = cell->velData[0][0] * scale_factor;
+            auto v_y  = cell->velData[1][0] * scale_factor;
+            auto v_z  = cell->velData[2][0] * scale_factor;
+            auto v_z2 = cell->velData[3][0] * scale_factor;
+            printf(" vel: %f,%f,%f,%f\n", v_x,v_y,v_z,v_z2);
+        }
+        // amplitude data
+        if(cp->configuration.ampIncluded) {
+            auto amp1  = cell->ampData[0][0];
+            auto amp2  = cell->ampData[1][0];
+            auto amp3  = cell->ampData[2][0];
+            auto amp4  = cell->ampData[3][0];
+            printf(" amp: %d,%d,%d,%d\n", amp1,amp2,amp3,amp4);
+        }
+        // correlation data
+        if(cp->configuration.corrIncluded) {
+            auto cor1  = cell->corData[0][0];
+            auto cor2  = cell->corData[1][0];
+            auto cor3  = cell->corData[2][0];
+            auto cor4  = cell->corData[3][0];      
+            printf(" cor: %d,%d,%d,%d\n", cor1,cor2,cor3,cor4);          
+        }
+
+        // printf("Test: cell-end\n");
+        // if(cp->configuration.velIncluded) {
+        //     auto v_x  = cell->velData[0][cp->beam_system.num_cells-1] * scale_factor;
+        //     auto v_y  = cell->velData[1][cp->beam_system.num_cells-1] * scale_factor;
+        //     auto v_z  = cell->velData[2][cp->beam_system.num_cells-1] * scale_factor;
+        //     auto v_z2 = cell->velData[3][cp->beam_system.num_cells-1] * scale_factor;
+        //     printf(" vel: %f,%f,%f,%f\n", v_x,v_y,v_z,v_z2);
+        // }
+        // // amplitude data
+        // if(cp->configuration.ampIncluded) {
+        //     auto amp1  = cell->ampData[0][cp->beam_system.num_cells-1];
+        //     auto amp2  = cell->ampData[1][cp->beam_system.num_cells-1];
+        //     auto amp3  = cell->ampData[2][cp->beam_system.num_cells-1];
+        //     auto amp4  = cell->ampData[3][cp->beam_system.num_cells-1];
+        //     printf(" amp: %d,%d,%d,%d\n", amp1,amp2,amp3,amp4);
+        // }
+        // // correlation data
+        // if(cp->configuration.corrIncluded) {
+        //     auto cor1  = cell->corData[0][cp->beam_system.num_cells-1];
+        //     auto cor2  = cell->corData[1][cp->beam_system.num_cells-1];
+        //     auto cor3  = cell->corData[2][cp->beam_system.num_cells-1];
+        //     auto cor4  = cell->corData[3][cp->beam_system.num_cells-1];      
+        //     printf(" cor: %d,%d,%d,%d\n", cor1,cor2,cor3,cor4);          
+        // }
     }
 
     void NortekDvl::parseCurrentProfile(const ds_core_msgs::RawData& bytes, uint8_t length, double max_clock_offset, 

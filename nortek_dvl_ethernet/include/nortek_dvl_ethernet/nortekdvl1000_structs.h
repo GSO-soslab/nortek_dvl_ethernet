@@ -34,7 +34,8 @@ namespace nortek_dvl_structs
     {
         ERROR = -1,
         BT = 0,
-        CP = 1
+        CP = 1,
+        WT = 2
     };
 
     // ===================================================================== //
@@ -54,10 +55,10 @@ namespace nortek_dvl_structs
 
 
     // ===================================================================== //
-    // Bottom Track
+    // DF21/DF22: bottom track and water track
     // ===================================================================== //
 
-    struct BTstatus
+    struct TrackStatus
     {
         uint32_t beam1VelValid  : 1; // BIT(0)
         uint32_t beam2VelValid  : 1; // BIT(1)
@@ -86,7 +87,7 @@ namespace nortek_dvl_structs
         uint32_t wakeupstate    : 4; // BIT(28-31)
     } __attribute__((packed));
 
-    struct bottomtrack
+    struct TrackData
     {
         uint8_t version;
         uint8_t data_offset;
@@ -100,7 +101,7 @@ namespace nortek_dvl_structs
         uint16_t microseconds;
         uint16_t nbeams;
         uint32_t error;
-        BTstatus status;
+        TrackStatus status;
         float speed_sound;       // [m/s]
         float temperature;       // [Celsius]
         float pressure;          // [bar]
@@ -135,10 +136,10 @@ namespace nortek_dvl_structs
     } __attribute__((packed));
 
     // ===================================================================== //
-    // Current Profile
+    // DF3: Current Profile
     // ===================================================================== //
         
-    struct CPconfiguration
+    struct ProfileConfigure
     {
         uint16_t pressure        : 1; // BIT(0), 1 and inclued in DVL 1000
         uint16_t temp            : 1; // BIT(1), 1 and inclued in DVL 1000
@@ -158,14 +159,14 @@ namespace nortek_dvl_structs
         uint16_t unused          : 1; // BIT(15)
     } __attribute__((packed));
 
-    struct CPbeams
+    struct ProfileBeams
     {
         uint16_t num_cells  : 10; // BIT(0~9), Number of Cells (NC)
         uint16_t coordinate : 2;  // BIT(10~11), 01=XYZ, 10=BEAM, 11=-
         uint16_t num_beams  : 4;  // BIT(12~15), Number of Beams (NB)
     } __attribute__((packed));
 
-    struct CPdataset
+    struct ProfileDataset
     {   
         uint16_t beamData1  : 4; // BIT(0~3), Physical beam used for 1st data set
         uint16_t beamData2  : 4; // BIT(4~7), Physical beam used for 2nd data set
@@ -173,7 +174,7 @@ namespace nortek_dvl_structs
         uint16_t beamData4  : 4; // BIT(12~15), Physical beam used for 4th data set
     } __attribute__((packed));
 
-    struct CPstatus0
+    struct ProfileStatus0
     {   
         uint16_t procIdle3   : 1;   // BIT(0),  Indicates that the processor Idles less than 3 percent
         uint16_t procIdle6   : 1;   // BIT(1),  Indicates that the processor Idles less than 6 percent
@@ -182,7 +183,7 @@ namespace nortek_dvl_structs
         uint16_t stat0inUse  : 1;   // BIT(15),  If this bit is set the rest of the word should be interpreted
     } __attribute__((packed));
 
-    struct CPstatus
+    struct ProfileStatus
     {
         uint32_t unused1        : 1; // BIT(0)
         uint32_t bdScaling      : 1; // BIT(1), cm scaling of blanking distance
@@ -201,12 +202,12 @@ namespace nortek_dvl_structs
         uint32_t wakeupState    : 4; // BIT(28~31), 10=break, 11= RTC alarm, 00=bad power, 01=power applied
     } __attribute__((packed));
 
-    struct currentprofile
+    struct ProfileData
     {
         /***** Information Data*****/
         uint8_t version;                // Version number of the Data Record Definition.
         uint8_t data_offset;            // Number of bytes from start of record to start of data (velocity/amplitude/correlation)
-        CPconfiguration configuration;  // Record Configuration Bit Mask
+        ProfileConfigure configuration;  // Record Configuration Bit Mask
         uint32_t serial_num;
         
         /***** Sensor Data *****/
@@ -223,7 +224,7 @@ namespace nortek_dvl_structs
         uint16_t heading;               // [0.01 degree]
         int16_t pitch;                  // [0.01 degree]
         int16_t roll;                   // [0.01 degree]
-        CPbeams beam_system;            // Number of Cells; Coordinate system; Number of Beams;
+        ProfileBeams beam_system;            // Number of Cells; Coordinate system; Number of Beams;
         uint16_t cell_size;             // [1 mm]
         uint16_t blanking;              // [1 mm]
         uint8_t nominalCorrelation;     // The nominal correlation for the configured combination of cell size and velocity range. [%]
@@ -232,74 +233,21 @@ namespace nortek_dvl_structs
         int16_t mag3D[3];               // Magnetometer Raw data in 3-axis
         int16_t acc3D[3];               // Accelrometer Raw Data in 3-axis (16384 = 1.0)
         uint16_t ambVelocity;           // [10^(velocity scaling) m/s] Ambiguity velocity, corrected for sound velocity,(Velocity scaled according to Velocity Scaling
-        CPdataset dataSetDescription;
+        ProfileDataset dataSetDescription;
         uint16_t transmitEnergy;
         int8_t velocityScaling;         // Used to scale velocity data.
         int8_t powerlevel;              // [dB] Configured power level
         int16_t magnTemperature;        // Magnetometer temperature reading
         int16_t rtcTemperature;         // [0.01 Deg Celsius] Real time clock temperature reading
         uint16_t error;
-        CPstatus0 status0;
-        CPstatus status;
+        ProfileStatus0 status0;
+        ProfileStatus status;
         uint32_t ensembleCounter;       // Counts the number of ensembles in both averaged data and burst data
 
         /***** Cell Data *****/
         int16_t velData[4][20];         // [10^(velocity scaling) m/s ]
         uint8_t ampData[4][20];         // [1 count]
         uint8_t corData[4][20];         // [0-100]
-
-    } __attribute__((packed));
-
-    struct currentprofileTest
-    {
-        /***** Information Data*****/
-        uint8_t version;                // Version number of the Data Record Definition.
-        uint8_t data_offset;            // Number of bytes from start of record to start of data (velocity/amplitude/correlation)
-        CPconfiguration configuration;  // Record Configuration Bit Mask
-        uint32_t serial_num;
-        
-        /***** Sensor Data *****/
-        uint8_t year;                   // Years since 1900 
-        uint8_t month;                  // Jan =0, Feb= 1 ...
-        uint8_t day;                    // (see struct tm definition)
-        uint8_t hour;                   // (see struct tm definition)
-        uint8_t minute;                 // (see struct tm definition)
-        uint8_t seconds;                // (see struct tm definition)
-        uint16_t microseconds;          // 100 usec
-        uint16_t speed_sound;           // [0.1 m/s]
-        int16_t temperature;            // [0.01 Deg Celsius]
-        uint32_t pressure;              // [0.001 dBar]
-        uint16_t heading;               // [0.01 degree]
-        int16_t pitch;                  // [0.01 degree]
-        int16_t roll;                   // [0.01 degree]
-        CPbeams beam_system;            // Number of Cells; Coordinate system; Number of Beams;
-        uint16_t cell_size;             // [1 mm]
-        uint16_t blanking;              // [1 mm]
-        uint8_t nominalCorrelation;     // The nominal correlation for the configured combination of cell size and velocity range. [%]
-        uint8_t pressTemp;              // Temperature of Pressure sensor: T = (Val/5) - 4.0 [0.2 Deg Celslus]
-        uint16_t battery;               // [0.1 Volt]
-        int16_t mag3D[3];               // Magnetometer Raw data in 3-axis
-        int16_t acc3D[3];               // Accelrometer Raw Data in 3-axis (16384 = 1.0)
-        uint16_t ambVelocity;           // [10^(velocity scaling) m/s] Ambiguity velocity, corrected for sound velocity,(Velocity scaled according to Velocity Scaling
-        CPdataset dataSetDescription;
-        uint16_t transmitEnergy;
-        int8_t velocityScaling;         // Used to scale velocity data.
-        int8_t powerlevel;              // [dB] Configured power level
-        int16_t magnTemperature;        // Magnetometer temperature reading
-        int16_t rtcTemperature;         // [0.01 Deg Celsius] Real time clock temperature reading
-        uint16_t error;
-        CPstatus0 status0;
-        CPstatus status;
-        uint32_t ensembleCounter;       // Counts the number of ensembles in both averaged data and burst data
-
-    } __attribute__((packed));
-
-    struct cellTest
-    {
-        /***** Cell Data with Flexible Array Member (FAM) *****/
-        int16_t velData[4][0];         // [10^(velocity scaling) m/s ]
-        uint8_t ampData[4][0];         // [1 count]
-        uint8_t corData[4][0];         // [0-100]
 
     } __attribute__((packed));
     

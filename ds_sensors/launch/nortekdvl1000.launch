@@ -12,8 +12,8 @@
 	    <param name="pub_derived"         type='bool'   value="true"/>
             <group ns="instrument">
                 <param name="type" value="UDP" />
-                <param name="udp_rx" value="9005" />
-                <param name="udp_address" value="192.168.2.3" />
+                <param name="udp_rx" value="9004" />
+                <param name="udp_address" value="192.168.2.151" />
                 <param name="udp_tx" value="9001" />
             </group>
         </group>

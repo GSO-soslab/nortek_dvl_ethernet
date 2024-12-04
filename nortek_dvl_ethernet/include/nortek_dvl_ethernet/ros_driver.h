@@ -33,7 +33,7 @@
 #include <nortek_dvl_ethernet/udp_socket_handler.h>
 #include <nortek_dvl_ethernet/nortekdvl1000_structs.h>
 #include <nortek_dvl_ethernet/parser.h>
-#include <nortek_dvl_ethernet/NortekDF21.h>
+#include <nortek_dvl_ethernet/NortekDF2.h>
 #include <nortek_dvl_ethernet/NortekDF3.h>
 
 class NortekDvlRos {
@@ -41,9 +41,11 @@ class NortekDvlRos {
 
     ros::NodeHandle nh_private_;
 
-    ros::Publisher df21_pub_;
+    ros::Publisher bottom_track_pub_;
 
-    ros::Publisher df3_pub_;
+    ros::Publisher water_track_pub_;
+
+    ros::Publisher current_profile_pub_;
 
     ros::Subscriber test_sub_;
 
@@ -63,9 +65,11 @@ class NortekDvlRos {
 
     void CallbackUDP(const uint8_t* data, std::size_t size);
 
-    void CallbackDF21(const nortek_dvl_ethernet::NortekDF21& df21);
+    void CallbackBT(const nortek_dvl_ethernet::NortekDF2& msg);
 
-    void CallbackDF3(const nortek_dvl_ethernet::NortekDF3& df3);
+    void CallbackWT(const nortek_dvl_ethernet::NortekDF2& msg);
+
+    void CallbackCP(const nortek_dvl_ethernet::NortekDF3& msg);
     
 public:
     NortekDvlRos(const ros::NodeHandle &nh,

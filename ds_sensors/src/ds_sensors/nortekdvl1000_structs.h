@@ -253,6 +253,59 @@ namespace ds_sensors {
 
         } __attribute__((packed));
 
+        struct currentprofileTest
+        {
+            /***** Information Data*****/
+            uint8_t version;                // Version number of the Data Record Definition.
+            uint8_t data_offset;            // Number of bytes from start of record to start of data (velocity/amplitude/correlation)
+            CPconfiguration configuration;  // Record Configuration Bit Mask
+            uint32_t serial_num;
+            
+            /***** Sensor Data *****/
+            uint8_t year;                   // Years since 1900 
+            uint8_t month;                  // Jan =0, Feb= 1 ...
+            uint8_t day;                    // (see struct tm definition)
+            uint8_t hour;                   // (see struct tm definition)
+            uint8_t minute;                 // (see struct tm definition)
+            uint8_t seconds;                // (see struct tm definition)
+            uint16_t microseconds;          // 100 usec
+            uint16_t speed_sound;           // [0.1 m/s]
+            int16_t temperature;            // [0.01 Deg Celsius]
+            uint32_t pressure;              // [0.001 dBar]
+            uint16_t heading;               // [0.01 degree]
+            int16_t pitch;                  // [0.01 degree]
+            int16_t roll;                   // [0.01 degree]
+            CPbeams beam_system;            // Number of Cells; Coordinate system; Number of Beams;
+            uint16_t cell_size;             // [1 mm]
+            uint16_t blanking;              // [1 mm]
+            uint8_t nominalCorrelation;     // The nominal correlation for the configured combination of cell size and velocity range. [%]
+            uint8_t pressTemp;              // Temperature of Pressure sensor: T = (Val/5) - 4.0 [0.2 Deg Celslus]
+            uint16_t battery;               // [0.1 Volt]
+            int16_t mag3D[3];               // Magnetometer Raw data in 3-axis
+            int16_t acc3D[3];               // Accelrometer Raw Data in 3-axis (16384 = 1.0)
+            uint16_t ambVelocity;           // [10^(velocity scaling) m/s] Ambiguity velocity, corrected for sound velocity,(Velocity scaled according to Velocity Scaling
+            CPdataset dataSetDescription;
+            uint16_t transmitEnergy;
+            int8_t velocityScaling;         // Used to scale velocity data.
+            int8_t powerlevel;              // [dB] Configured power level
+            int16_t magnTemperature;        // Magnetometer temperature reading
+            int16_t rtcTemperature;         // [0.01 Deg Celsius] Real time clock temperature reading
+            uint16_t error;
+            CPstatus0 status0;
+            CPstatus status;
+            uint32_t ensembleCounter;       // Counts the number of ensembles in both averaged data and burst data
+
+        } __attribute__((packed));
+
+        struct cellTest
+        {
+            /***** Cell Data with Flexible Array Member (FAM) *****/
+            int16_t velData[4][0];         // [10^(velocity scaling) m/s ]
+            uint8_t ampData[4][0];         // [1 count]
+            uint8_t corData[4][0];         // [0-100]
+
+        } __attribute__((packed));
+        
     }  // nortekdvl_structs
 
 } //ds_sensors

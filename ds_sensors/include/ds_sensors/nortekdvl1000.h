@@ -96,6 +96,8 @@ namespace ds_sensors
         static void parseCurrentProfile(const ds_core_msgs::RawData& bytes, uint8_t length, double max_clock_offset, 
                                         ds_sensor_msgs::NortekDF3* big_msg);
 
+        static void parseCurrentProfileTest(const ds_core_msgs::RawData& bytes, uint8_t length);
+
         static void cp_to_msg(const ros::Time& io_t, double max_clock_offset, 
                               const nortekdvl_structs::currentprofile& cp, ds_sensor_msgs::NortekDF3* big_msg);
 
@@ -106,6 +108,12 @@ namespace ds_sensors
         static bool checksum(uint16_t length, const uint8_t* buffer);
 
         static double seconds_from_epoch(boost::posix_time::ptime const& t);
+
+        // Helper function to allocate memory for the struct + dynamic arrays
+        static nortekdvl_structs::cellTest* allocateCell(int size);
+
+        // Function to parse a buffer into the struct
+        static nortekdvl_structs::cellTest* parseBuffer(const uint8_t* buffer, int size);
 
     protected:
         void setupPublishers() override;

@@ -33,7 +33,7 @@ uint8 seconds
 uint16 microSeconds
 uint16 nBeams
 uint32 error
-nortek_dvl_ethernet/NortekBTStatus status
+nortek_dvl_ethernet/NortekTrackStatus status
 float32 speed_sound
 float32 temperature
 float32 pressure
