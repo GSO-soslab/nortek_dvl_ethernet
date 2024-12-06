@@ -1,1 +1,0 @@
-string yaml_payload

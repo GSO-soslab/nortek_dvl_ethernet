@@ -1,4 +1,0 @@
-string device_name
-string desired_state
----
-string action
