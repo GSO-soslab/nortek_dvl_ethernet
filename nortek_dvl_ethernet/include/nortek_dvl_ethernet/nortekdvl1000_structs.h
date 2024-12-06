@@ -243,20 +243,21 @@ namespace nortek_dvl_structs
         ProfileStatus status;
         uint32_t ensembleCounter;       // Counts the number of ensembles in both averaged data and burst data
 
-        /***** Cell Data *****/
-        // int16_t velData[4][20];         // [10^(velocity scaling) m/s ]
-        // uint8_t ampData[4][20];         // [1 count]
-        // uint8_t corData[4][20];         // [0-100]
-
     } __attribute__((packed));
     
-    struct ProfileCells
+    struct ProfileCellsSimple
     {
-        /***** Cell Data *****/
+        /***** Cell Data: with fixed cell size *****/
         int16_t velData[4][20];         // [10^(velocity scaling) m/s ]
         uint8_t ampData[4][20];         // [1 count]
         uint8_t corData[4][20];         // [0-100]
     } __attribute__((packed));    
+
+    struct ProfileCells {
+        int16_t* velData[4];    // velocity: [10^(velocity scaling) m/s ]
+        uint8_t* ampData[4];    // amplitude: [1 count]
+        uint8_t* corData[4];    // correlation: [0-100]
+    };
 
 }  // nortek_dvl_structs
 

@@ -69,16 +69,21 @@ private:
         const nortek_dvl_structs::TrackData& data, 
         nortek_dvl_ethernet::NortekDF2* df2_msg);    
 
-    // void ToDF3(
-    //     const double io_time, 
-    //     const nortek_dvl_structs::ProfileData& data, 
-    //     nortek_dvl_ethernet::NortekDF3* df3_msg);  
-
-    void ToDF3Test(
+    void ToDF3(
         const double io_time, 
         const nortek_dvl_structs::ProfileData& data, 
         const nortek_dvl_structs::ProfileCells& cells, 
         nortek_dvl_ethernet::NortekDF3* df3_msg);  
+
+    void ToDF3(
+        const double io_time, 
+        const nortek_dvl_structs::ProfileData& data, 
+        const nortek_dvl_structs::ProfileCellsSimple& cells, 
+        nortek_dvl_ethernet::NortekDF3* df3_msg);  
+
+    nortek_dvl_structs::ProfileCells* ParseCells(
+        const uint8_t* buffer, int size);
+
 
 public:
     NortekDVLParser() {}
