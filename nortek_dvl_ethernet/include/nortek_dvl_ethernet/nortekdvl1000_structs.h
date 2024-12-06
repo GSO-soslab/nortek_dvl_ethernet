@@ -48,11 +48,10 @@ namespace nortek_dvl_structs
         uint8_t header_size;
         uint8_t headerid;
         uint8_t family;
-        uint8_t data_size;
-        uint8_t data_checksum;
-        uint8_t header_checksum;
+        uint16_t data_size;
+        uint16_t data_checksum;
+        uint16_t header_checksum;
     } __attribute__((packed));
-
 
     // ===================================================================== //
     // DF21/DF22: bottom track and water track
@@ -245,12 +244,20 @@ namespace nortek_dvl_structs
         uint32_t ensembleCounter;       // Counts the number of ensembles in both averaged data and burst data
 
         /***** Cell Data *****/
-        int16_t velData[4][20];         // [10^(velocity scaling) m/s ]
-        uint8_t ampData[4][20];         // [1 count]
-        uint8_t corData[4][20];         // [0-100]
+        // int16_t velData[4][20];         // [10^(velocity scaling) m/s ]
+        // uint8_t ampData[4][20];         // [1 count]
+        // uint8_t corData[4][20];         // [0-100]
 
     } __attribute__((packed));
     
+    struct ProfileCells
+    {
+        /***** Cell Data *****/
+        int16_t velData[4][20];         // [10^(velocity scaling) m/s ]
+        uint8_t ampData[4][20];         // [1 count]
+        uint8_t corData[4][20];         // [0-100]
+    } __attribute__((packed));    
+
 }  // nortek_dvl_structs
 
 #endif // NORTEK_DVL_ETHERNET_DATA_STRUCTURE_

@@ -50,17 +50,17 @@ private:
     nortek_dvl_structs::parserID ParseHeader(
         const uint8_t* buffer, 
         const size_t& buffer_size, 
-        uint8_t& length);
+        uint8_t& head_size);
 
     void ParseTrack(
         const uint8_t* buffer, 
-        uint8_t& length, 
+        uint8_t& head_size, 
         const double io_time, 
         nortek_dvl_ethernet::NortekDF2* df2_msg);
 
     void ParseCurrentProfile(
         const uint8_t* buffer, 
-        uint8_t& length, 
+        uint8_t& head_size, 
         const double io_time, 
         nortek_dvl_ethernet::NortekDF3* df3_msg);
 
@@ -69,9 +69,15 @@ private:
         const nortek_dvl_structs::TrackData& data, 
         nortek_dvl_ethernet::NortekDF2* df2_msg);    
 
-    void ToDF3(
+    // void ToDF3(
+    //     const double io_time, 
+    //     const nortek_dvl_structs::ProfileData& data, 
+    //     nortek_dvl_ethernet::NortekDF3* df3_msg);  
+
+    void ToDF3Test(
         const double io_time, 
         const nortek_dvl_structs::ProfileData& data, 
+        const nortek_dvl_structs::ProfileCells& cells, 
         nortek_dvl_ethernet::NortekDF3* df3_msg);  
 
 public:

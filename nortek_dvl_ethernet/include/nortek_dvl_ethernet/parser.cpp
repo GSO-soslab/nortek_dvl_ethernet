@@ -1,5 +1,6 @@
 #include <nortek_dvl_ethernet/parser.h>
 
+//! TODO: this checksum is need to be changed ?
 bool NortekDVLParser::Checksum(uint16_t length, const uint8_t* buffer)
 {
     uint16_t chksum = 0xB58C;
@@ -19,15 +20,15 @@ bool NortekDVLParser::Checksum(uint16_t length, const uint8_t* buffer)
 nortek_dvl_structs::parserID 
 NortekDVLParser::Parse(const uint8_t* data, std::size_t size, const double io_time)
 {
-    uint8_t length;
-    auto id = ParseHeader(data, size, length);    
+    uint8_t head_size;
+    auto id = ParseHeader(data, size, head_size);    
 
     switch (id)
     {
         case nortek_dvl_structs::BT: 
         {
             auto bottom_track = nortek_dvl_ethernet::NortekDF2{};
-            ParseTrack(data, length, io_time, &bottom_track);
+            ParseTrack(data, head_size, io_time, &bottom_track);
 
             // send to callback function
             if(bottom_track_callback_) {
@@ -40,7 +41,7 @@ NortekDVLParser::Parse(const uint8_t* data, std::size_t size, const double io_ti
         case nortek_dvl_structs::CP: 
         {
             auto current_profile = nortek_dvl_ethernet::NortekDF3{};
-            ParseCurrentProfile(data, length, io_time, &current_profile);
+            ParseCurrentProfile(data, head_size, io_time, &current_profile);
 
             // send to callback function
             if(current_profile_callback_) {
@@ -53,7 +54,7 @@ NortekDVLParser::Parse(const uint8_t* data, std::size_t size, const double io_ti
         case nortek_dvl_structs::WT: 
         {
             auto water_track = nortek_dvl_ethernet::NortekDF2{};
-            ParseTrack(data, length, io_time, &water_track);
+            ParseTrack(data, head_size, io_time, &water_track);
 
             // send to callback function
             if(water_track_callback_) {
@@ -74,7 +75,7 @@ NortekDVLParser::Parse(const uint8_t* data, std::size_t size, const double io_ti
 }
 
 nortek_dvl_structs::parserID 
-NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, uint8_t& length) 
+NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, uint8_t& head_size) 
 {
     if (buffer_size < 2) {
         // Check for zero or small size
@@ -87,8 +88,7 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
         // Match on HEADER
         auto *hdr = reinterpret_cast<const nortek_dvl_structs::header *> (buffer);
 
-        length = hdr->header_size;
-        auto payload = buffer + length;
+        head_size = hdr->header_size;
         size_t payload_len = hdr->data_size;
 
         // check header data size
@@ -115,6 +115,7 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
                 std::cout<< "Warning: BT Payload length longer that data received\n";
             }
 
+            printf("it's BT\n");
             return nortek_dvl_structs::BT;
         } 
         else if (hdr->headerid == 0x16) {
@@ -122,6 +123,7 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
                 std::cout<< "Warning: CP Payload length longer that data received\n";
             }
             
+            printf("it's CP\n");
             return nortek_dvl_structs::CP;
         }
         else if (hdr->headerid == 0x1d) {
@@ -129,6 +131,7 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
                 std::cout<< "Warning: WT Payload length longer that data received\n";
             }
             
+            printf("it's WT\n");
             return nortek_dvl_structs::WT;
         }        
         else {
@@ -143,12 +146,12 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
 
 void NortekDVLParser::ParseTrack(
     const uint8_t* buffer, 
-    uint8_t& length, 
+    uint8_t& head_size, 
     const double io_time, 
     nortek_dvl_ethernet::NortekDF2* df2_msg)
 {
     // get buffer
-    auto payload = buffer + length;
+    auto payload = buffer + head_size;
     // parse into defined struct
     auto *track = reinterpret_cast<const nortek_dvl_structs::TrackData*>(payload);
     // convert struct into raw msg
@@ -300,20 +303,212 @@ void NortekDVLParser::ToDF2(
 
 void NortekDVLParser::ParseCurrentProfile(
     const uint8_t* buffer, 
-    uint8_t& length, 
+    uint8_t& head_size, 
     const double io_time, 
     nortek_dvl_ethernet::NortekDF3* df3_msg)
 {
-    auto payload = buffer + length;
-    // parse into defined struct
-    auto *profile = reinterpret_cast<const nortek_dvl_structs::ProfileData*>(payload);
+    // parse the profile data without cells
+    auto payload_profile = buffer + head_size;
+    auto *profile = reinterpret_cast<const nortek_dvl_structs::ProfileData*>(payload_profile);
+
+    // parse the cells
+    auto profile_size = sizeof(nortek_dvl_structs::ProfileData);
+    auto payload_cells = buffer + head_size + profile_size;
+    auto *cells = reinterpret_cast<const nortek_dvl_structs::ProfileCells*>(payload_cells);
+
     // convert parse struct into ros message 
-    ToDF3(io_time, *profile, df3_msg);
+    // ToDF3(io_time, *profile, df3_msg);
+    ToDF3Test(io_time, *profile, *cells, df3_msg);
 }
 
-void NortekDVLParser::ToDF3(
+// void NortekDVLParser::ToDF3(
+//     const double io_time, 
+//     const nortek_dvl_structs::ProfileData& data, 
+//     nortek_dvl_ethernet::NortekDF3* df3_msg)
+// {
+//     /***** Information Data*****/
+
+//     df3_msg->dvl_type                      = nortek_dvl_ethernet::NortekDF3::DVL_TYPE_PISTON;
+//     df3_msg->version                       = data.version;
+//     df3_msg->data_offset                   = data.data_offset;
+//     df3_msg->configuration.pressure        = data.configuration.pressure;
+//     df3_msg->configuration.temp            = data.configuration.temp;
+//     df3_msg->configuration.compass         = data.configuration.compass;
+//     df3_msg->configuration.tilt            = data.configuration.tilt;
+//     df3_msg->configuration.empty           = data.configuration.empty;
+//     df3_msg->configuration.velIncluded     = data.configuration.velIncluded;
+//     df3_msg->configuration.ampIncluded     = data.configuration.ampIncluded;
+//     df3_msg->configuration.corrIncluded    = data.configuration.corrIncluded;
+//     df3_msg->configuration.altiIncluded    = data.configuration.altiIncluded;
+//     df3_msg->configuration.altiRawIncluded = data.configuration.altiRawIncluded;
+//     df3_msg->configuration.ASTIncluded     = data.configuration.ASTIncluded;
+//     df3_msg->configuration.echoIncluded    = data.configuration.echoIncluded;
+//     df3_msg->configuration.ahrsIncluded    = data.configuration.ahrsIncluded;
+//     df3_msg->configuration.PGoodIncluded   = data.configuration.PGoodIncluded;
+//     df3_msg->configuration.stdDevIncluded  = data.configuration.stdDevIncluded;
+//     df3_msg->configuration.unused          = data.configuration.unused;
+//     df3_msg->serial_number                 = data.serial_num;
+
+//     /***** Sensor Data*****/
+
+//     // get DVL system time
+//     df3_msg->year          = data.year;
+//     df3_msg->month         = data.month;
+//     df3_msg->day           = data.day;
+//     df3_msg->hour          = data.hour;
+//     df3_msg->minute        = data.minute;
+//     df3_msg->seconds       = data.seconds;
+//     df3_msg->micro_seconds = data.microseconds; // actually sent as 100-microsecond counts
+//     // convert to epoch
+//     boost::posix_time::ptime dvltime(
+//         boost::gregorian::date(static_cast<int>(df3_msg->year) + 1900, 
+//                                static_cast<int>(df3_msg->month) + 1, 
+//                                df3_msg->day),
+//         boost::posix_time::hours(df3_msg->hour) + 
+//         boost::posix_time::minutes(df3_msg->minute) +
+//         boost::posix_time::seconds(df3_msg->seconds) +
+//         boost::posix_time::microseconds(static_cast<int>(df3_msg->micro_seconds)*100));
+
+//     // different type of sensor data
+//     df3_msg->speed_sound = data.speed_sound*0.1;
+//     df3_msg->temperature = data.temperature*0.01;
+//     df3_msg->pressure    = data.pressure*0.0001; //Bar
+//     // not inclued for this DVL
+//     df3_msg->heading = data.heading*0.01;
+//     df3_msg->pitch   = data.pitch*0.01;
+//     df3_msg->roll    = data.roll*0.01;
+//     // beam system
+//     df3_msg->beam_system.num_cells  = data.beam_system.num_cells;
+//     df3_msg->beam_system.coordinate = data.beam_system.coordinate;
+//     df3_msg->beam_system.num_beams  = data.beam_system.num_beams;
+//     df3_msg->cell_size              = data.cell_size*0.001;
+//     df3_msg->nominal_correlation    = static_cast<int>(data.nominalCorrelation);
+//     df3_msg->pressure_temperature   = (data.pressTemp/5.0-4)*0.2;
+//     df3_msg->battery                = data.battery*0.1;
+//     // not inclued for this DVL
+//     df3_msg->mag3D[0] = data.mag3D[0];
+//     df3_msg->mag3D[1] = data.mag3D[1];
+//     df3_msg->mag3D[2] = data.mag3D[2];
+//     df3_msg->acc3D[0] = data.acc3D[0];
+//     df3_msg->acc3D[1] = data.acc3D[1];
+//     df3_msg->acc3D[2] = data.acc3D[2];
+//     // Data Set Description
+//     df3_msg->dataset_description.beamData1 = data.dataSetDescription.beamData1;
+//     df3_msg->dataset_description.beamData2 = data.dataSetDescription.beamData2;
+//     df3_msg->dataset_description.beamData3 = data.dataSetDescription.beamData3;
+//     df3_msg->dataset_description.beamData4 = data.dataSetDescription.beamData4;
+//     // different type of sensor data
+//     df3_msg->transmit_energy = data.transmitEnergy;
+//     df3_msg->power_level     = static_cast<float>(data.powerlevel);
+//     df3_msg->mag_temperature = data.magnTemperature;
+//     df3_msg->rtc_temperature = data.rtcTemperature*0.01;
+
+//     df3_msg->velocity_scale  = static_cast<int>(data.velocityScaling);
+//     double scale_factor      = pow(10, df3_msg->velocity_scale);
+//     df3_msg->ambVelocity     = data.ambVelocity * scale_factor;
+
+//     //Basic Error Handling
+//     df3_msg->error = data.error;
+//     if (df3_msg->error != 0) 
+//         std::cout<< "DVL CP Error Message is: "<<df3_msg->error<<std::endl;
+//     // status0
+//     df3_msg->status0.procIdle3      = data.status0.procIdle3;
+//     df3_msg->status0.procIdle6      = data.status0.procIdle6;
+//     df3_msg->status0.procIdle12     = data.status0.procIdle12;
+//     df3_msg->status0.empty          = data.status0.empty;
+//     df3_msg->status0.stat0inUse     = data.status0.stat0inUse;
+//     // status
+//     df3_msg->status.unused1         = data.status.unused1;
+//     df3_msg->status.bdScaling       = data.status.bdScaling;
+//     df3_msg->status.unused2         = data.status.unused2;
+//     df3_msg->status.unused3         = data.status.unused3;
+//     df3_msg->status.unused4         = data.status.unused4;
+//     df3_msg->status.echoFrequency   = data.status.echoFrequency;
+//     df3_msg->status.boostRun        = data.status.boostRun;
+//     df3_msg->status.telemetry       = data.status.telemetry;
+//     df3_msg->status.echoIndex       = data.status.echoIndex;
+//     df3_msg->status.activeConfig    = data.status.activeConfig;
+//     df3_msg->status.lowVoltSkip     = data.status.lowVoltSkip;
+//     df3_msg->status.prevWakeupState = data.status.prevWakeupState;
+//     df3_msg->status.autoOrient      = data.status.autoOrient;
+//     df3_msg->status.orient          = data.status.orient;
+//     df3_msg->status.wakeupState     = data.status.wakeupState;
+//     // handle blanking scaling
+//     if(df3_msg->status.bdScaling)
+//         df3_msg->blanking           = data.blanking*0.01;
+//     else
+//         df3_msg->blanking           = data.blanking*0.001;
+//     //// TODO: use this as count for current profile msg?
+//     df3_msg->ensemble_counter       = data.ensembleCounter;
+
+//     /***** Header Data *****/
+
+//     df3_msg->io_time = ros::Time().fromSec(io_time);
+//     df3_msg->system_time = ros::Time::fromBoost(dvltime);
+//     df3_msg->header.stamp = df3_msg->system_time;
+//     double max_clock_offset = 0.5;
+
+//     // Determine the authoratative timestamp for this message
+//     ros::Duration dt = df3_msg->io_time - df3_msg->system_time;
+//     if (fabs(dt.toSec()) > max_clock_offset) {
+//         df3_msg->header.stamp = df3_msg->io_time;
+
+// #ifdef DEBUG
+//         // If the timestamps are wildly different, use the IO time
+//         std::cout<<"DVL CP clock differs from CPU clock by " << dt.toSec() 
+//                         << " seconds (threshold: "
+//                         << max_clock_offset <<"); using I/O times\n";
+// #endif
+//     }
+
+//     /***** Cell Data *****/
+
+//     //! TODO: change to dynamic cell size
+//     if(df3_msg->beam_system.num_beams != 4)
+//         std::cout<<"DVL CP error: Wrong DVL beam number , it's: " << df3_msg->beam_system.num_beams<<std::endl;
+//     if(df3_msg->beam_system.num_cells != 20)
+//         std::cout<<"DVL CP error: cell number , it's: " << df3_msg->beam_system.num_cells <<std::endl;
+
+//     for(int i=0; i< (int)df3_msg->beam_system.num_cells; i++) {
+//         // prepare the cell
+//         nortek_dvl_ethernet::NortekProfileCell cell;
+
+//         // time
+//         cell.header_time = df3_msg->header.stamp.sec;
+//         cell.dvl_time    = df3_msg->system_time.sec;
+//         // cell id
+//         cell.num = i+1;
+//         cell.pos = df3_msg->blanking + (i+1) * df3_msg->cell_size;
+//         // velocity data
+//         if(df3_msg->configuration.velIncluded) {
+//             cell.v_x  = data.velData[0][i] * scale_factor;
+//             cell.v_y  = data.velData[1][i] * scale_factor;
+//             cell.v_z  = data.velData[2][i] * scale_factor;
+//             cell.v_z2 = data.velData[3][i] * scale_factor;
+//         }
+//         // amplitude data
+//         if(df3_msg->configuration.ampIncluded) {
+//             cell.amp1  = data.ampData[0][i];
+//             cell.amp2  = data.ampData[1][i];
+//             cell.amp3  = data.ampData[2][i];
+//             cell.amp4  = data.ampData[3][i];
+//         }
+//         // correlation data
+//         if(df3_msg->configuration.corrIncluded) {
+//             cell.cor1  = data.corData[0][i];
+//             cell.cor2  = data.corData[1][i];
+//             cell.cor3  = data.corData[2][i];
+//             cell.cor4  = data.corData[3][i];                
+//         }
+
+//         df3_msg->cells.push_back(cell);
+//     }
+// }
+
+void NortekDVLParser::ToDF3Test(
     const double io_time, 
     const nortek_dvl_structs::ProfileData& data, 
+    const nortek_dvl_structs::ProfileCells& cells, 
     nortek_dvl_ethernet::NortekDF3* df3_msg)
 {
     /***** Information Data*****/
@@ -462,7 +657,6 @@ void NortekDVLParser::ToDF3(
     for(int i=0; i< (int)df3_msg->beam_system.num_cells; i++) {
         // prepare the cell
         nortek_dvl_ethernet::NortekProfileCell cell;
-
         // time
         cell.header_time = df3_msg->header.stamp.sec;
         cell.dvl_time    = df3_msg->system_time.sec;
@@ -471,26 +665,26 @@ void NortekDVLParser::ToDF3(
         cell.pos = df3_msg->blanking + (i+1) * df3_msg->cell_size;
         // velocity data
         if(df3_msg->configuration.velIncluded) {
-            cell.v_x  = data.velData[0][i] * scale_factor;
-            cell.v_y  = data.velData[1][i] * scale_factor;
-            cell.v_z  = data.velData[2][i] * scale_factor;
-            cell.v_z2 = data.velData[3][i] * scale_factor;
+            cell.v_x  = cells.velData[0][i] * scale_factor;
+            cell.v_y  = cells.velData[1][i] * scale_factor;
+            cell.v_z  = cells.velData[2][i] * scale_factor;
+            cell.v_z2 = cells.velData[3][i] * scale_factor;
         }
         // amplitude data
         if(df3_msg->configuration.ampIncluded) {
-            cell.amp1  = data.ampData[0][i];
-            cell.amp2  = data.ampData[1][i];
-            cell.amp3  = data.ampData[2][i];
-            cell.amp4  = data.ampData[3][i];
+            cell.amp1  = cells.ampData[0][i];
+            cell.amp2  = cells.ampData[1][i];
+            cell.amp3  = cells.ampData[2][i];
+            cell.amp4  = cells.ampData[3][i];
         }
         // correlation data
         if(df3_msg->configuration.corrIncluded) {
-            cell.cor1  = data.corData[0][i];
-            cell.cor2  = data.corData[1][i];
-            cell.cor3  = data.corData[2][i];
-            cell.cor4  = data.corData[3][i];                
+            cell.cor1  = cells.corData[0][i];
+            cell.cor2  = cells.corData[1][i];
+            cell.cor3  = cells.corData[2][i];
+            cell.cor4  = cells.corData[3][i];                
         }
 
         df3_msg->cells.push_back(cell);
     }
-}
+}    
