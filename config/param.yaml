@@ -2,3 +2,7 @@ UDP:
   udp_rx: 9004
   udp_address: 192.168.2.110
   buffer_size: 512
+
+DVL:
+  beam_angle: 25.0
+  sound_speed: 1500

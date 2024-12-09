@@ -16,11 +16,13 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   message_generation
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(Threads)
+find_package(Eigen3 REQUIRED)
 
 file(GLOB MSG_FILES ${CMAKE_CURRENT_SOURCE_DIR}/**/*.msg)
 
@@ -51,6 +53,7 @@ catkin_package(
     roscpp
     std_msgs
     message_runtime
+    sensor_msgs
 #  DEPENDS system_lib
 )
 
@@ -62,6 +65,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
+  ${EIGEN3_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME}_node

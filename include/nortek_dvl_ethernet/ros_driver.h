@@ -24,11 +24,16 @@
 #ifndef NORTEK_DVL_ETHERNET_ROS_DRIVER_
 #define NORTEK_DVL_ETHERNET_ROS_DRIVER_
 
-// ros
+#include <Eigen/Dense>
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/String.h>
-// customized
+#include <geometry_msgs/TwistWithCovarianceStamped.h>
+#include <sensor_msgs/FluidPressure.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/point_cloud2_iterator.h>
+#include <sensor_msgs/Range.h>
+
 #include <nortek_dvl_ethernet/default.h>
 #include <nortek_dvl_ethernet/udp_socket_handler.h>
 #include <nortek_dvl_ethernet/nortekdvl1000_structs.h>
@@ -47,6 +52,14 @@ class NortekDvlRos {
 
     ros::Publisher current_profile_pub_;
 
+    ros::Publisher bt_velocity_pub_;
+
+    ros::Publisher bt_pc2_pub_;
+
+    ros::Publisher bt_range_pub_;
+
+    ros::Publisher pressure_pub_;
+
     ros::Subscriber test_sub_;
 
     std::shared_ptr<UDPSocketHandler> udp_handler_;
@@ -54,6 +67,10 @@ class NortekDvlRos {
     std::shared_ptr<NortekDVLParser> parser_;
 
     UdpParam udp_param_;
+    
+    double beam_angle_;
+
+    double sound_speed_;
 
     void LoadParam();
 
@@ -70,7 +87,26 @@ class NortekDvlRos {
     void CallbackWT(const nortek_dvl_ethernet::NortekDF2& msg);
 
     void CallbackCP(const nortek_dvl_ethernet::NortekDF3& msg);
+
+    void BTtoVelocity(
+        const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
+        geometry_msgs::TwistWithCovarianceStamped::Ptr& twist_msg);
     
+    // BT measureme the gauge pressure and unit in Bar
+    // FluidPressure need absolute pressure unit in Pascal
+    void BTtoPressure(
+        const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
+        sensor_msgs::FluidPressure::Ptr& pressure_msg);
+
+    void BTtoPC2(
+        const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
+        sensor_msgs::PointCloud2::Ptr& pc2_msg);
+
+    // the averaged range from 4 beams
+    void BTtoRange(
+        const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
+        sensor_msgs::Range::Ptr& range_msg);
+
 public:
     NortekDvlRos(const ros::NodeHandle &nh,
                  const ros::NodeHandle &nh_private);
