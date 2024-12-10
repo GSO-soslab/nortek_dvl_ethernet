@@ -58,6 +58,8 @@ class NortekDvlRos {
 
     ros::Publisher bt_range_pub_;
 
+    ros::Publisher wt_velocity_pub_;
+
     ros::Publisher pressure_pub_;
 
     ros::Subscriber test_sub_;
@@ -88,22 +90,22 @@ class NortekDvlRos {
 
     void CallbackCP(const nortek_dvl_ethernet::NortekDF3& msg);
 
-    void BTtoVelocity(
+    void TrackToVelocity(
         const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
         geometry_msgs::TwistWithCovarianceStamped::Ptr& twist_msg);
     
     // BT measureme the gauge pressure and unit in Bar
     // FluidPressure need absolute pressure unit in Pascal
-    void BTtoPressure(
+    void TrackToPressure(
         const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
         sensor_msgs::FluidPressure::Ptr& pressure_msg);
 
-    void BTtoPC2(
+    void TrackToPC2(
         const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
         sensor_msgs::PointCloud2::Ptr& pc2_msg);
 
     // the averaged range from 4 beams
-    void BTtoRange(
+    void TrackToRange(
         const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
         sensor_msgs::Range::Ptr& range_msg);
 

@@ -72,6 +72,8 @@ void NortekDvlRos::SetupRos()
     bt_pc2_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("bt_pointcloud", 10);
 
     bt_range_pub_ = nh_.advertise<sensor_msgs::Range>("bt_range", 10);
+    
+    wt_velocity_pub_ = nh_.advertise<geometry_msgs::TwistWithCovarianceStamped>("wt_velocity", 10);
 
     pressure_pub_ = nh_.advertise<sensor_msgs::FluidPressure>("pressure", 10);
 
@@ -122,7 +124,7 @@ void NortekDvlRos::CallbackBT(const nortek_dvl_ethernet::NortekDF2& msg)
     geometry_msgs::TwistWithCovarianceStamped::Ptr twist_msg(
         new geometry_msgs::TwistWithCovarianceStamped);
 
-    BTtoVelocity(bt_msg, twist_msg);
+    TrackToVelocity(bt_msg, twist_msg);
     bt_velocity_pub_.publish(twist_msg);
 
     // ===================================================================== //
@@ -131,7 +133,7 @@ void NortekDvlRos::CallbackBT(const nortek_dvl_ethernet::NortekDF2& msg)
 
     sensor_msgs::FluidPressure::Ptr pressure_msg(
         new sensor_msgs::FluidPressure);
-    BTtoPressure(bt_msg, pressure_msg);
+    TrackToPressure(bt_msg, pressure_msg);
     pressure_pub_.publish(pressure_msg);
 
     // ===================================================================== //
@@ -139,7 +141,7 @@ void NortekDvlRos::CallbackBT(const nortek_dvl_ethernet::NortekDF2& msg)
     // ===================================================================== //
     sensor_msgs::PointCloud2::Ptr pc2_msg(
         new sensor_msgs::PointCloud2);
-    BTtoPC2(bt_msg, pc2_msg);
+    TrackToPC2(bt_msg, pc2_msg);
     bt_pc2_pub_.publish(pc2_msg);
 
     // ===================================================================== //
@@ -147,16 +149,31 @@ void NortekDvlRos::CallbackBT(const nortek_dvl_ethernet::NortekDF2& msg)
     // ===================================================================== //
     sensor_msgs::Range::Ptr range_msg(
         new sensor_msgs::Range);
-    BTtoRange(bt_msg, range_msg);
+    TrackToRange(bt_msg, range_msg);
     bt_range_pub_.publish(range_msg);
 }
 
 void NortekDvlRos::CallbackWT(const nortek_dvl_ethernet::NortekDF2& msg)
 {
-    nortek_dvl_ethernet::NortekDF2 wt_msg = msg;
+    // ===================================================================== //
+    // publish water track message 
+    // ===================================================================== //
+
+    nortek_dvl_ethernet::NortekDF2::Ptr wt_msg(
+        new nortek_dvl_ethernet::NortekDF2(msg));
     //! TODO: add param
-    wt_msg.header.frame_id = "nortek_dvl";
+    wt_msg->header.frame_id = "nortek_dvl";
     water_track_pub_.publish(wt_msg);
+
+    // ===================================================================== //
+    // publish twist message
+    // ===================================================================== //
+
+    geometry_msgs::TwistWithCovarianceStamped::Ptr twist_msg(
+        new geometry_msgs::TwistWithCovarianceStamped);
+
+    TrackToVelocity(wt_msg, twist_msg);
+    wt_velocity_pub_.publish(twist_msg);
 }
 
 void NortekDvlRos::CallbackCP(const nortek_dvl_ethernet::NortekDF3& msg)
@@ -185,7 +202,7 @@ void NortekDvlRos::CallbackTest(const std_msgs::Float32::ConstPtr &msg) {
     ROS_INFO("%s: Recv: %f", ros::this_node::getName().c_str(), msg->data);
 }
 
-void NortekDvlRos::BTtoVelocity(
+void NortekDvlRos::TrackToVelocity(
     const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
     geometry_msgs::TwistWithCovarianceStamped::Ptr& twist_msg) {
 
@@ -222,7 +239,7 @@ void NortekDvlRos::BTtoVelocity(
     twist_msg->twist.covariance[6 * 2 + 2] = noise_z * noise_x;
 }
 
-void NortekDvlRos::BTtoPressure(
+void NortekDvlRos::TrackToPressure(
     const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
     sensor_msgs::FluidPressure::Ptr& pressure_msg) {
 
@@ -232,7 +249,7 @@ void NortekDvlRos::BTtoPressure(
     pressure_msg->variance = 0.001;
 }
 
-void NortekDvlRos::BTtoPC2(
+void NortekDvlRos::TrackToPC2(
     const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
     sensor_msgs::PointCloud2::Ptr& pc2_msg) {
 
@@ -273,7 +290,7 @@ void NortekDvlRos::BTtoPC2(
     pc2_msg->header = bt_msg->header;
 }
 
-void NortekDvlRos::BTtoRange(
+void NortekDvlRos::TrackToRange(
     const nortek_dvl_ethernet::NortekDF2::Ptr& bt_msg, 
     sensor_msgs::Range::Ptr& range_msg) {
 
