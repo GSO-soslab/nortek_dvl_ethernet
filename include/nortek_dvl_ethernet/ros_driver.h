@@ -74,6 +74,8 @@ class NortekDvlRos {
 
     double sound_speed_;
 
+    std::string frame_id_;
+
     void LoadParam();
 
     void SetupRos();

@@ -114,7 +114,7 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
                 std::cout<< "Warning: BT Payload length longer that data received\n";
             }
 
-            printf("it's BT\n");
+            // printf("it's BT\n");
             return nortek_dvl_structs::BT;
         } 
         else if (hdr->headerid == 0x16) {
@@ -122,7 +122,7 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
                 std::cout<< "Warning: CP Payload length longer that data received\n";
             }
             
-            printf("it's CP\n");
+            // printf("it's CP\n");
             return nortek_dvl_structs::CP;
         }
         else if (hdr->headerid == 0x1d) {
@@ -130,7 +130,7 @@ NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, u
                 std::cout<< "Warning: WT Payload length longer that data received\n";
             }
             
-            printf("it's WT\n");
+            // printf("it's WT\n");
             return nortek_dvl_structs::WT;
         }        
         else {
@@ -385,6 +385,53 @@ void NortekDVLParser::ToDF3(
     df3_msg->configuration.unused          = data.configuration.unused;
     df3_msg->serial_number                 = data.serial_num;
 
+#ifdef DEBUG
+    if (df3_msg->configuration.pressure) { printf("pressure vaild\n"); }
+    else { printf("pressure not vaild\n"); }
+    if (df3_msg->configuration.temp) { printf("temp vaild\n"); }
+    else { printf("temp not vaild\n"); }
+    if (df3_msg->configuration.compass) { printf("compass vaild\n"); }
+    else { printf("compass not vaild\n"); }
+    if (df3_msg->configuration.tilt) { printf("tilt vaild\n"); }
+    else { printf("tilt not vaild\n"); }
+    if (df3_msg->configuration.velIncluded) { printf("velIncluded vaild\n"); }
+    else { printf("velIncluded not vaild\n"); }
+    if (df3_msg->configuration.ampIncluded) { printf("ampIncluded vaild\n"); }
+    else { printf("ampIncluded not vaild\n"); }
+    if (df3_msg->configuration.corrIncluded) { printf("corrIncluded vaild\n"); }
+    else { printf("corrIncluded not vaild\n"); }
+    if (df3_msg->configuration.altiIncluded) { printf("altiIncluded\n"); }
+    else { printf("no altiIncluded\n"); }
+    if(df3_msg->configuration.altiRawIncluded) { printf("altiRawIncluded\n"); }
+    else { printf("no altiRawIncluded\n"); }
+    if(df3_msg->configuration.ASTIncluded) { printf("ASTIncluded\n"); }
+    else { printf("no ASTIncluded\n"); }
+    if(df3_msg->configuration.echoIncluded) { printf("echoIncluded\n"); }
+    else { printf("no echoIncluded\n"); }    
+    if(df3_msg->configuration.ahrsIncluded) { printf("ahrsIncluded\n"); }
+    else { printf("no ahrsIncluded\n"); }        
+    if(df3_msg->configuration.PGoodIncluded) { printf("PGoodIncluded\n"); }
+    else { printf("no PGoodIncluded\n"); }      
+    if(df3_msg->configuration.stdDevIncluded) { printf("stdDevIncluded\n"); }
+    else { printf("no stdDevIncluded\n"); }      
+
+    //! NOTE: example for our Nortek DVL 1000
+    // pressure vaild
+    // temp vaild
+    // compass not vaild
+    // tilt not vaild
+    // velIncluded vaild
+    // ampIncluded vaild
+    // corrIncluded vaild
+    // no altiIncluded
+    // no altiRawIncluded
+    // no ASTIncluded
+    // no echoIncluded
+    // no ahrsIncluded
+    // no PGoodIncluded
+    // no stdDevIncluded       
+#endif
+
     /***** Sensor Data*****/
 
     // get DVL system time
@@ -439,6 +486,7 @@ void NortekDVLParser::ToDF3(
     df3_msg->mag_temperature = data.magnTemperature;
     df3_msg->rtc_temperature = data.rtcTemperature*0.01;
 
+    //! TODO: if Echo Sounder is inclued, this become Number of Echo Sounder Cells ?
     df3_msg->velocity_scale  = static_cast<int>(data.velocityScaling);
     double scale_factor      = pow(10, df3_msg->velocity_scale);
     df3_msg->ambVelocity     = data.ambVelocity * scale_factor;
@@ -498,12 +546,6 @@ void NortekDVLParser::ToDF3(
     }
 
     /***** Cell Data *****/
-
-    //! TODO: change to dynamic cell size
-    if(df3_msg->beam_system.num_beams != 4)
-        std::cout<<"DVL CP error: Wrong DVL beam number , it's: " << df3_msg->beam_system.num_beams<<std::endl;
-    if(df3_msg->beam_system.num_cells != 20)
-        std::cout<<"DVL CP error: cell number , it's: " << df3_msg->beam_system.num_cells <<std::endl;
 
     for(int i=0; i< (int)df3_msg->beam_system.num_cells; i++) {
         // prepare the cell

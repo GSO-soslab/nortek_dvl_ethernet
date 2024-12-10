@@ -54,9 +54,12 @@ void NortekDvlRos::LoadParam()
     nh_private_.param<std::string>("UDP/udp_address", udp_param_.udp_address, DEFAULT_UDP_ADDRESS);
     nh_private_.param<int>("UDP/buffer_size", udp_param_.buffer_size, DEFAULT_UDP_BUFFER);    
 
-    // DVL configureation
+    // DVL configuration
     nh_private_.param<double>("DVL/beam_angle", beam_angle_, 25.0);
     nh_private_.param<double>("DVL/sound_speed", sound_speed_, 1500.0);
+
+    // ROS configuration
+    nh_private_.param<std::string>("ROS/frame_id", frame_id_, "nortek_dvl");
 }
 
 void NortekDvlRos::SetupRos()
@@ -113,8 +116,7 @@ void NortekDvlRos::CallbackBT(const nortek_dvl_ethernet::NortekDF2& msg)
 
     nortek_dvl_ethernet::NortekDF2::Ptr bt_msg(
         new nortek_dvl_ethernet::NortekDF2(msg));
-    //! TODO: add param
-    bt_msg->header.frame_id = "nortek_dvl";
+    bt_msg->header.frame_id = frame_id_;
     bottom_track_pub_.publish(bt_msg);
 
     // ===================================================================== //
@@ -161,8 +163,7 @@ void NortekDvlRos::CallbackWT(const nortek_dvl_ethernet::NortekDF2& msg)
 
     nortek_dvl_ethernet::NortekDF2::Ptr wt_msg(
         new nortek_dvl_ethernet::NortekDF2(msg));
-    //! TODO: add param
-    wt_msg->header.frame_id = "nortek_dvl";
+    wt_msg->header.frame_id = frame_id_;
     water_track_pub_.publish(wt_msg);
 
     // ===================================================================== //
@@ -179,8 +180,7 @@ void NortekDvlRos::CallbackWT(const nortek_dvl_ethernet::NortekDF2& msg)
 void NortekDvlRos::CallbackCP(const nortek_dvl_ethernet::NortekDF3& msg)
 {
     nortek_dvl_ethernet::NortekDF3 cp_msg = msg;
-    //! TODO: add param
-    cp_msg.header.frame_id = "nortek_dvl";
+    cp_msg.header.frame_id = frame_id_;
     current_profile_pub_.publish(cp_msg);
 }
 
@@ -229,7 +229,8 @@ void NortekDvlRos::TrackToVelocity(
     double scale = sound_speed_ / bt_msg->speed_sound;
 
     // fill the data
-    //! TODO: use FOM square as covariance ?
+    //! TODO: FOM seems single ping precision, can we use this for each axis velocity precision
+    //        At least the Nortek Nucles used as this 
     twist_msg->header = bt_msg->header;
     twist_msg->twist.twist.linear.x = velocity_x * scale;
     twist_msg->twist.twist.linear.y = velocity_y * scale;
@@ -245,7 +246,9 @@ void NortekDvlRos::TrackToPressure(
 
     pressure_msg->header = bt_msg->header;
     pressure_msg->fluid_pressure = (bt_msg->pressure + 1.01325) * 100000;
-    //! TODO: add the noise from the datasheet ?
+    //! TODO: accuracy is 0.1% full scale, 
+    // For example, a 100 psi gauge with 0.1 % of FS accuracy would be accurate to ± 0.1 psi across its entire range
+    // BUT we don't know the full scale of DVL pressure, however, the accuracy is pretty good
     pressure_msg->variance = 0.001;
 }
 

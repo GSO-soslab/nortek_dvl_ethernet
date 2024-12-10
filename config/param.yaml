@@ -6,3 +6,6 @@ UDP:
 DVL:
   beam_angle: 25.0
   sound_speed: 1500
+
+ROS:
+  frame_id: "nortek_dvl"

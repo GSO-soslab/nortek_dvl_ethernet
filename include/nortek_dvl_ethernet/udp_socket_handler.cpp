@@ -24,21 +24,15 @@
 #include <nortek_dvl_ethernet/udp_socket_handler.h>
 
 UDPSocketHandler::UDPSocketHandler(const UdpParam& param) 
-    : io_service_(), socket_(io_service_) 
+    : io_service_(), socket_(io_service_), param_(param)
 {
-    //! DEBUG: check the param
-    std::cout<<"param.udp_rx: "<<param.udp_rx<<std::endl;
-    std::cout<<"param.udp_tx: "<<param.udp_tx<<std::endl;
-    std::cout<<"param.udp_address: "<<param.udp_address<<std::endl;
-    std::cout<<"param.buffer_size: "<<param.buffer_size<<std::endl;
-            
     // Initialize the socket
-    boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::udp::v4(), param.udp_rx);
+    boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::udp::v4(), param_.udp_rx);
     socket_.open(endpoint.protocol());
     socket_.bind(endpoint);
 
     // Start async receive
-    recv_buffer_.resize(param.buffer_size);
+    recv_buffer_.resize(param_.buffer_size);
     StartAsyncReceive();
 
     // Start io_service in a separate thread
@@ -62,6 +56,14 @@ void UDPSocketHandler::StartAsyncReceive()
         [this](const boost::system::error_code& error, std::size_t bytes_transferred) {
             if (!error) {
 
+                //! TODO: need to check if we are receiving data from specific address ? 
+                // if(remote_endpoint_.address().to_string() != param_.udp_address) {
+                //     printf("UDP socket: Wrong remote address: %s\n", 
+                //         remote_endpoint_.address().to_string().c_str());
+                //     StartAsyncReceive();
+                //     return;
+                // }
+
 #ifdef DEBUG
                 std::ostringstream oss;
                 for (size_t i = 0; i < bytes_transferred; ++i) {
@@ -70,7 +72,6 @@ void UDPSocketHandler::StartAsyncReceive()
                 }
                 std::cout<< "Received raw data (hex): " << oss.str() <<std::endl;
 #endif
-
                 // send to callback function
                 if(callback_) {
                     callback_(recv_buffer_.data(), bytes_transferred);
@@ -78,68 +79,8 @@ void UDPSocketHandler::StartAsyncReceive()
 
                 // Start next async receive
                 StartAsyncReceive();
+
+                return;
             }
         });
 }
-
-// void NortekDvlEthernet::Receive()
-// {
-//     //! TODO: need resize the buffer ?
-//     recv_buffer_.assign(recv_buffer_.size(), 0);
-
-//     socket_->async_receive_from(
-//         boost::asio::buffer(recv_buffer_), remote_endpoint_,
-//         boost::bind(&NortekDvlEthernet::HandleReceive, this, 
-//                      boost::asio::placeholders::error,
-//                      boost::asio::placeholders::bytes_transferred));
-
-//     // std::cout<<"Debug: Receive \n";
-//     // recv_buffer_.assign(recv_buffer_.size(), 0);
-//     // socket_->async_receive(
-//     //     boost::asio::buffer(recv_buffer_), 0,
-//     //     boost::bind(&NortekDvlEthernet::HandleReceive, this, 
-//     //                  boost::asio::placeholders::error,
-//     //     boost::asio::placeholders::bytes_transferred));    
-// }
-
-// void NortekDvlEthernet::HandleReceive(
-//     const boost::system::error_code& error, 
-//     std::size_t bytes_transferred)
-// {
-//     std::cout<<"Debug: HandleReceive \n";
-
-//     // handle the data
-//     if (!error || error == boost::asio::error::message_size)
-//     {
-//         // Print the received message
-//         std::cout << "UDP Received " << bytes_transferred << " bytes from "
-//                     << remote_endpoint_.address().to_string() << ":"
-//                     << remote_endpoint_.port() << std::endl;
-//         std::cout << "Message: " << std::string(recv_buffer_.data(), bytes_transferred) << std::endl;
-
-//         num_read_error_ = 0;
-
-//         //! TODO: Store timestamp as soon as received
-
-//         //! TODO: setup callback
-
-//         Receive();
-
-//         return;
-//     }    
-
-//     // handle the error
-//     num_read_error_ ++;
-//     std::cout<<" Read error on socket: " <<error << " " << error.message()<<"\n";
-//     std::cout<<num_read_error_ <<" consecutive read errors on port " << socket_->local_endpoint().port()<<"\n";
-
-//     if (num_read_error_ <= 10)
-//     {
-//         std::cout<<"Retrying read in 0.1s\n";
-//         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//         return;
-//     }
-
-//     std::cout<<"Too many read errors on port: " <<socket_->local_endpoint().port()<<"\n";
-//     std::exit(EXIT_FAILURE);
-// }       

@@ -42,6 +42,8 @@ private:
     boost::thread io_thread_;
     std::vector<uint8_t> recv_buffer_;
 
+    UdpParam param_;
+    
     std::function <void(const uint8_t*, std::size_t)> callback_;
 
 public:
