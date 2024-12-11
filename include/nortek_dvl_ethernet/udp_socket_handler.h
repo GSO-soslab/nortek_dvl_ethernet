@@ -12,8 +12,7 @@
     You should have received a copy of the GNU General Public License
     along with the project.  If not, see <https://www.gnu.org/licenses/>.
 
-    Authors: 
-      Lin Zhao <linzhao@uri.edu>
+    Authors: Lin Zhao <linzhao@uri.edu>
     Year: 2024
 
     Copyright (C) 2024 Smart Ocean Systems Laboratory
@@ -32,28 +31,63 @@
 // customized
 #include <nortek_dvl_ethernet/parameters.h>
 
+/**
+ * @brief This is the UDP handler class for data receiving using socket
+ *
+ * It read all the data and pass other classes using callback function.
+ */
 class UDPSocketHandler {
 private:
-    void StartAsyncReceive();
-
+    //! boost io_service for data interface
     boost::asio::io_service io_service_;
+
+    //! boost socket
     boost::asio::ip::udp::socket socket_;
+
+    //! boost endpoint (remote information?)
     boost::asio::ip::udp::endpoint remote_endpoint_;
+
+    //! boost thread for async data reading
     boost::thread io_thread_;
+
+    //! received buffer from UDP socket
     std::vector<uint8_t> recv_buffer_;
 
+    //! UDP parameters
     UdpParam param_;
     
+    /**
+     * @brief Sets up a callback to receive the raw binary UDP socket data
+     * @param[in] data uint8_t type coming data
+     * @param[in] size size_t type coming data size
+     *
+     * This function allows the user to define a callback that will be invoked 
+     * whenever new socket data is received. The callback accepts raw binary 
+     * data and data size.
+     */    
     std::function <void(const uint8_t*, std::size_t)> callback_;
 
-public:
-    // Update DataCallback to take a uint8_t (char) array and its size
-    using DataCallback = std::function<void(const uint8_t*, std::size_t)>;    
+    /**
+     * @brief Receive data from UDP socket
+     */   
+    void StartAsyncReceive();
 
+public:
+    /**
+     * @brief Default constructor
+     * @param[in] param the UDP related parameters
+     */  
     UDPSocketHandler(const UdpParam& param);
 
+    /**
+     * @brief Default deconstructor
+     */ 
     ~UDPSocketHandler();
 
+    /**
+     * @brief The registration function to setup the callback for UDP socket data
+     * @param[in] callback_  the std::function to pass binary data and buffer size
+     */
     void SetCallback(decltype(callback_) cb) { callback_  = cb;}
 };
 

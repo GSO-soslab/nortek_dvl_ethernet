@@ -1,6 +1,28 @@
+/*
+    This project is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This project is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with the project.  If not, see <https://www.gnu.org/licenses/>.
+
+    Authors: Lin Zhao <linzhao@uri.edu>
+    Year: 2024
+
+    Copyright (C) 2024 Smart Ocean Systems Laboratory
+*/
+
 #include <nortek_dvl_ethernet/parser.h>
 
-bool NortekDVLParser::Checksum(uint16_t length, const uint8_t* buffer)
+bool NortekDVLParser::Checksum(
+    uint16_t length, 
+    const uint8_t* buffer)
 {
     uint16_t chksum = 0xB58C;
     uint16_t nbshorts = (length >> 1);
@@ -16,8 +38,10 @@ bool NortekDVLParser::Checksum(uint16_t length, const uint8_t* buffer)
     return chksum;
 }
 
-nortek_dvl_structs::parserID 
-NortekDVLParser::Parse(const uint8_t* data, std::size_t size, const double io_time)
+nortek_dvl_structs::parserID NortekDVLParser::Parse(
+    const uint8_t* data, 
+    std::size_t size, 
+    const double io_time)
 {
     uint8_t head_size;
     auto id = ParseHeader(data, size, head_size);    
@@ -73,8 +97,10 @@ NortekDVLParser::Parse(const uint8_t* data, std::size_t size, const double io_ti
     return id;
 }
 
-nortek_dvl_structs::parserID 
-NortekDVLParser::ParseHeader(const uint8_t* buffer, const size_t& buffer_size, uint8_t& head_size) 
+nortek_dvl_structs::parserID NortekDVLParser::ParseHeader(
+    const uint8_t* buffer, 
+    const size_t& buffer_size, 
+    uint8_t& head_size) 
 {
     if (buffer_size < 2) {
         // Check for zero or small size
@@ -320,9 +346,9 @@ void NortekDVLParser::ParseCurrentProfile(
     ToDF3(io_time, *profile, *cells, df3_msg);
 }
 
-// Function to parse the buffer into the struct
 nortek_dvl_structs::ProfileCells* NortekDVLParser::ParseCells(
-    const uint8_t* buffer, int size) 
+    const uint8_t* buffer, 
+    int size) 
 {
     // Allocate memory for the struct
     auto* cells = new nortek_dvl_structs::ProfileCells;

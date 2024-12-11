@@ -12,8 +12,7 @@
     You should have received a copy of the GNU General Public License
     along with the project.  If not, see <https://www.gnu.org/licenses/>.
 
-    Authors: 
-      Lin Zhao <linzhao@uri.edu>
+    Authors: Lin Zhao <linzhao@uri.edu>
     Year: 2024
 
     Copyright (C) 2024 Smart Ocean Systems Laboratory
@@ -28,6 +27,7 @@
 // UDP related
 // ========================================================================= //
 
+//! UDP parameters
 struct UdpParam
 {
     int udp_rx;

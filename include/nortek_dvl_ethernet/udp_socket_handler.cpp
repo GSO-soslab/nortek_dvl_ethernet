@@ -1,6 +1,4 @@
 /*
-    This file is part of ALPHA AUV project.
-
     This project is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -14,8 +12,7 @@
     You should have received a copy of the GNU General Public License
     along with the project.  If not, see <https://www.gnu.org/licenses/>.
 
-    Authors: 
-      Lin Zhao <linzhao@uri.edu>
+    Authors: Lin Zhao <linzhao@uri.edu>
     Year: 2024
 
     Copyright (C) 2024 Smart Ocean Systems Laboratory

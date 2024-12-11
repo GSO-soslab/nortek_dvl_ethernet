@@ -1,6 +1,4 @@
 /*
-    This file is part of ALPHA AUV project.
-
     This project is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -14,8 +12,7 @@
     You should have received a copy of the GNU General Public License
     along with the project.  If not, see <https://www.gnu.org/licenses/>.
 
-    Authors: 
-      Lin Zhao <linzhao@uri.edu>
+    Authors: Lin Zhao <linzhao@uri.edu>
     Year: 2024
 
     Copyright (C) 2024 Smart Ocean Systems Laboratory
@@ -30,6 +27,7 @@ namespace nortek_dvl_structs
     // ID
     // ===================================================================== //
 
+    //! Parsed ID
     enum parserID
     {
         ERROR = -1,
@@ -42,6 +40,7 @@ namespace nortek_dvl_structs
     // Header
     // ===================================================================== //
 
+    //! DVL message header 
     struct header
     {
         uint8_t sync;
@@ -57,6 +56,7 @@ namespace nortek_dvl_structs
     // DF21/DF22: bottom track and water track
     // ===================================================================== //
 
+    //! DF21/DF22 message status
     struct TrackStatus
     {
         uint32_t beam1VelValid  : 1; // BIT(0)
@@ -86,12 +86,13 @@ namespace nortek_dvl_structs
         uint32_t wakeupstate    : 4; // BIT(28-31)
     } __attribute__((packed));
 
+    //! DF21/DFD22 message data
     struct TrackData
     {
         uint8_t version;
         uint8_t data_offset;
         uint32_t serial_num;
-        uint8_t year;            //Trugger time
+        uint8_t year;            // Trugger time
         uint8_t month;
         uint8_t day;
         uint8_t hour;
@@ -138,6 +139,7 @@ namespace nortek_dvl_structs
     // DF3: Current Profile
     // ===================================================================== //
         
+    //! DF3 configuration    
     struct ProfileConfigure
     {
         uint16_t pressure        : 1; // BIT(0), 1 and inclued in DVL 1000
@@ -158,6 +160,7 @@ namespace nortek_dvl_structs
         uint16_t unused          : 1; // BIT(15)
     } __attribute__((packed));
 
+    //! DF3 beam information    
     struct ProfileBeams
     {
         uint16_t num_cells  : 10; // BIT(0~9), Number of Cells (NC)
@@ -165,6 +168,7 @@ namespace nortek_dvl_structs
         uint16_t num_beams  : 4;  // BIT(12~15), Number of Beams (NB)
     } __attribute__((packed));
 
+    //! DF3 beam data    
     struct ProfileDataset
     {   
         uint16_t beamData1  : 4; // BIT(0~3), Physical beam used for 1st data set
@@ -173,6 +177,7 @@ namespace nortek_dvl_structs
         uint16_t beamData4  : 4; // BIT(12~15), Physical beam used for 4th data set
     } __attribute__((packed));
 
+    //! DF3 status 0    
     struct ProfileStatus0
     {   
         uint16_t procIdle3   : 1;   // BIT(0),  Indicates that the processor Idles less than 3 percent
@@ -182,6 +187,7 @@ namespace nortek_dvl_structs
         uint16_t stat0inUse  : 1;   // BIT(15),  If this bit is set the rest of the word should be interpreted
     } __attribute__((packed));
 
+    //! DF3 status 
     struct ProfileStatus
     {
         uint32_t unused1        : 1; // BIT(0)
@@ -201,6 +207,7 @@ namespace nortek_dvl_structs
         uint32_t wakeupState    : 4; // BIT(28~31), 10=break, 11= RTC alarm, 00=bad power, 01=power applied
     } __attribute__((packed));
 
+    //! DF3 data   
     struct ProfileData
     {
         /***** Information Data*****/
@@ -245,6 +252,7 @@ namespace nortek_dvl_structs
 
     } __attribute__((packed));
     
+    //! DF3 fixed size cell data   
     struct ProfileCellsSimple
     {
         /***** Cell Data: with fixed cell size *****/
@@ -253,6 +261,7 @@ namespace nortek_dvl_structs
         uint8_t corData[4][20];         // [0-100]
     } __attribute__((packed));    
 
+    //! DF3 dynamic size cell data   
     struct ProfileCells {
         int16_t* velData[4];    // velocity: [10^(velocity scaling) m/s ]
         uint8_t* ampData[4];    // amplitude: [1 count]
