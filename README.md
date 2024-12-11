@@ -12,7 +12,6 @@ roslaunch nortek_dvl_ethernet driver.launch
 
 ## Introduction:
 
-### Topics:
 - bottom track raw data 
     - topic: "bottom_track"
     - type: nortek_dvl_ethernet::NortekDF2
