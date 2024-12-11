@@ -75,6 +75,8 @@ void NortekDvlRos::SetupRos()
     
     wt_velocity_pub_ = nh_.advertise<geometry_msgs::TwistWithCovarianceStamped>("wt_velocity", 10);
 
+    // cp_cells_pub_ = nh_.advertise<nav_msgs::GridCells>("cp_cells", 5);
+
     pressure_pub_ = nh_.advertise<sensor_msgs::FluidPressure>("pressure", 10);
 }
 
@@ -177,9 +179,32 @@ void NortekDvlRos::CallbackWT(
 void NortekDvlRos::CallbackCP(
     const nortek_dvl_ethernet::NortekDF3& msg)
 {
-    nortek_dvl_ethernet::NortekDF3 cp_msg = msg;
-    cp_msg.header.frame_id = frame_id_;
-    current_profile_pub_.publish(cp_msg);
+    // ===================================================================== //
+    // publish current profile message 
+    // ===================================================================== //
+
+    nortek_dvl_ethernet::NortekDF3::Ptr cp_msg(
+        new nortek_dvl_ethernet::NortekDF3(msg));
+    cp_msg->header.frame_id = frame_id_;
+    current_profile_pub_.publish(cp_msg);    
+
+    // ===================================================================== //
+    // publish pressure message 
+    // ===================================================================== //
+
+    sensor_msgs::FluidPressure::Ptr pressure_msg(
+        new sensor_msgs::FluidPressure);
+    ProfileToPressure(cp_msg, pressure_msg);
+    pressure_pub_.publish(pressure_msg);
+
+    // ===================================================================== //
+    // publish cells message 
+    // ===================================================================== //
+
+    //! TODO: use nav_msgs/GridCells ?
+
+    //! TODO: sound speed correction ?
+
 }
 
 void NortekDvlRos::CallbackUDP(
@@ -299,3 +324,22 @@ void NortekDvlRos::TrackToRange(
     range_msg->max_range = 75;
     range_msg->range = track_msg->altitude;
 }
+
+void NortekDvlRos::ProfileToPressure(
+    const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
+    sensor_msgs::FluidPressure::Ptr& pressure_msg) 
+{
+    pressure_msg->header = profile_msg->header;
+    pressure_msg->fluid_pressure = (profile_msg->pressure + 1.01325) * 100000;
+    //! TODO: accuracy is 0.1% full scale, 
+    // For example, a 100 psi gauge with 0.1 % of FS accuracy would be accurate to ± 0.1 psi across its entire range
+    // BUT we don't know the full scale of DVL pressure, however, the accuracy is pretty good
+    pressure_msg->variance = 0.001;
+}
+
+// void NortekDvlRos::ProfileToCells(
+//     const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
+//     nav_msgs::GridCells::Ptr& cells_msg)
+// {
+//     cells_msg->header = profile_msg->header;
+// }

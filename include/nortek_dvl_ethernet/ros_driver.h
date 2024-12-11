@@ -30,6 +30,8 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <sensor_msgs/Range.h>
+// #include <nav_msgs/GridCells.h>
+// #include <geometry_msgs/Point.h>
 
 #include <nortek_dvl_ethernet/default.h>
 #include <nortek_dvl_ethernet/udp_socket_handler.h>
@@ -72,6 +74,9 @@ class NortekDvlRos {
 
     //! water track 3-axis velocity publisher
     ros::Publisher wt_velocity_pub_;
+
+    //! current profile cells publisher
+    ros::Publisher cp_cells_pub_;
 
     //! pressure from bottom track and current profile publisher
     ros::Publisher pressure_pub_;
@@ -188,6 +193,41 @@ class NortekDvlRos {
     void TrackToRange(
         const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
         sensor_msgs::Range::Ptr& range_msg);
+
+    /**
+     * @brief Convert DF3 data into pressure message
+     * @param[in] track_msg the whole DF3 ROS message
+     * @param[out] pressure_msg the pressure in sensor_msgs::FluidPressure 
+     * 
+     * Nortek output the gauge pressure and unit in Bar.
+     * FluidPressure need absolute pressure unit in Pascal.
+     */ 
+    void ProfileToPressure(
+        const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
+        sensor_msgs::FluidPressure::Ptr& pressure_msg);
+
+    /**
+     * @brief Convert DF3 data into cells message
+     * @param[in] track_msg the whole DF3 ROS message
+     * @param[out] cells_msg the cells in nav_msgs::GridCells
+     * 
+     * cell_width: beam size
+     * cell_height: cell size
+     * 
+     * Each c_i has three measuremet:
+     * x=velocity, y=amplitude,z=correlation
+     * 
+     *                      Beams Direction
+     *                   beam1 beam2 beam3 beam4
+     *                  |----------------------->
+     * Depth      cell1 |c1    c2    c3    c4   
+     * Direction  cell2 |c5    c6    c7    c8
+     *            cell3 |c9    c10   c11   c12
+     *                 \ /
+     */ 
+    // void ProfileToCells(
+    //     const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
+    //     nav_msgs::GridCells::Ptr& cells_msg);
 
 public:
     /**
