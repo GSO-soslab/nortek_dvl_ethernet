@@ -56,7 +56,10 @@ void NortekDvlRos::LoadParam()
     nh_private_.param<double>("DVL/sound_speed", sound_speed_, 1500.0);
 
     // ROS configuration
-    nh_private_.param<std::string>("ROS/frame_id", frame_id_, "nortek_dvl");
+    nh_private_.param<std::string>("ROS/sensor_frame_id", sensor_frame_id_, "nortek_dvl");
+    nh_private_.param<std::string>("ROS/world_frame_id", world_frame_id_, "world");
+    nh_private_.param<double>("ROS/fluid_density", fluid_density_, 1023.0);
+    nh_private_.param<double>("ROS/depth_cov", depth_cov_, 0.001);
 }
 
 void NortekDvlRos::SetupRos()
@@ -78,6 +81,8 @@ void NortekDvlRos::SetupRos()
     // cp_cells_pub_ = nh_.advertise<nav_msgs::GridCells>("cp_cells", 5);
 
     pressure_pub_ = nh_.advertise<sensor_msgs::FluidPressure>("pressure", 10);
+
+    depth_pub_ = nh_.advertise<nav_msgs::Odometry>("depth_odometry", 10);
 }
 
 void NortekDvlRos::InitDataInterface()
@@ -114,7 +119,7 @@ void NortekDvlRos::CallbackBT(
 
     nortek_dvl_ethernet::NortekDF2::Ptr track_msg(
         new nortek_dvl_ethernet::NortekDF2(msg));
-    track_msg->header.frame_id = frame_id_;
+    track_msg->header.frame_id = sensor_frame_id_;
     bottom_track_pub_.publish(track_msg);
 
     // ===================================================================== //
@@ -135,6 +140,14 @@ void NortekDvlRos::CallbackBT(
         new sensor_msgs::FluidPressure);
     TrackToPressure(track_msg, pressure_msg);
     pressure_pub_.publish(pressure_msg);
+
+    // ===================================================================== //
+    // publish depth odometry message
+    // ===================================================================== //
+    nav_msgs::Odometry::Ptr depth_odom_msg(
+        new nav_msgs::Odometry);
+    TrackToDepthOdom(track_msg, depth_odom_msg);
+    depth_pub_.publish(depth_odom_msg);
 
     // ===================================================================== //
     // publish pointcloud2 message
@@ -162,7 +175,7 @@ void NortekDvlRos::CallbackWT(
 
     nortek_dvl_ethernet::NortekDF2::Ptr wt_msg(
         new nortek_dvl_ethernet::NortekDF2(msg));
-    wt_msg->header.frame_id = frame_id_;
+    wt_msg->header.frame_id = sensor_frame_id_;
     water_track_pub_.publish(wt_msg);
 
     // ===================================================================== //
@@ -185,7 +198,7 @@ void NortekDvlRos::CallbackCP(
 
     nortek_dvl_ethernet::NortekDF3::Ptr cp_msg(
         new nortek_dvl_ethernet::NortekDF3(msg));
-    cp_msg->header.frame_id = frame_id_;
+    cp_msg->header.frame_id = sensor_frame_id_;
     current_profile_pub_.publish(cp_msg);    
 
     // ===================================================================== //
@@ -196,6 +209,14 @@ void NortekDvlRos::CallbackCP(
         new sensor_msgs::FluidPressure);
     ProfileToPressure(cp_msg, pressure_msg);
     pressure_pub_.publish(pressure_msg);
+
+    // ===================================================================== //
+    // publish depth odometry message
+    // ===================================================================== //
+    nav_msgs::Odometry::Ptr depth_odom_msg(
+        new nav_msgs::Odometry);
+    ProfileToDepthOdom(cp_msg, depth_odom_msg);
+    depth_pub_.publish(depth_odom_msg);
 
     // ===================================================================== //
     // publish cells message 
@@ -271,6 +292,24 @@ void NortekDvlRos::TrackToPressure(
     pressure_msg->variance = 0.001;
 }
 
+void NortekDvlRos::TrackToDepthOdom(
+    const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
+    nav_msgs::Odometry::Ptr& depth_odom_msg)
+{
+    // header
+    depth_odom_msg->header.stamp = track_msg->header.stamp;
+    depth_odom_msg->header.frame_id = world_frame_id_;
+    depth_odom_msg->child_frame_id = sensor_frame_id_;
+    // convert the pressure to depth
+    auto depth = track_msg->pressure / ( fluid_density_ * 9.81);
+    // construct the odometry message
+    depth_odom_msg->pose.pose.position.x = 0.0;
+    depth_odom_msg->pose.pose.position.y = 0.0;
+    depth_odom_msg->pose.pose.position.z = -depth;
+    depth_odom_msg->pose.covariance[6 * 2 + 2] = depth_cov_;
+}
+
+
 void NortekDvlRos::TrackToPC2(
     const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
     sensor_msgs::PointCloud2::Ptr& pc2_msg) 
@@ -335,6 +374,23 @@ void NortekDvlRos::ProfileToPressure(
     // For example, a 100 psi gauge with 0.1 % of FS accuracy would be accurate to ± 0.1 psi across its entire range
     // BUT we don't know the full scale of DVL pressure, however, the accuracy is pretty good
     pressure_msg->variance = 0.001;
+}
+
+void NortekDvlRos::ProfileToDepthOdom(
+    const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
+    nav_msgs::Odometry::Ptr& depth_odom_msg)
+{
+    // header
+    depth_odom_msg->header.stamp = profile_msg->header.stamp;
+    depth_odom_msg->header.frame_id = world_frame_id_;
+    depth_odom_msg->child_frame_id = sensor_frame_id_;
+    // convert the pressure to depth
+    auto depth = profile_msg->pressure / ( fluid_density_ * 9.81);
+    // construct the odometry message
+    depth_odom_msg->pose.pose.position.x = 0.0;
+    depth_odom_msg->pose.pose.position.y = 0.0;
+    depth_odom_msg->pose.pose.position.z = -depth;
+    depth_odom_msg->pose.covariance[6 * 2 + 2] = depth_cov_;
 }
 
 // void NortekDvlRos::ProfileToCells(

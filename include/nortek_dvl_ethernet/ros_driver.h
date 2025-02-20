@@ -30,6 +30,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <sensor_msgs/Range.h>
+#include <nav_msgs/Odometry.h>
 // #include <nav_msgs/GridCells.h>
 // #include <geometry_msgs/Point.h>
 
@@ -81,9 +82,21 @@ class NortekDvlRos {
     //! pressure from bottom track and current profile publisher
     ros::Publisher pressure_pub_;
 
+    //! depth odometry from bottom track and current profile publisher
+    ros::Publisher depth_pub_;    
+
     //! ROS related parameters:
     //!  frame_id of published messages
-    std::string frame_id_;
+    std::string sensor_frame_id_;
+
+    //!  frame_id of pressure depth odometry
+    std::string world_frame_id_;    
+
+    //! fluid_density used for depth calulcation from pressure
+    double fluid_density_;
+
+    //! covariance for depth estimnation
+    double depth_cov_;
 
     //! UDP related parameters
     UdpParam udp_param_;
@@ -172,6 +185,17 @@ class NortekDvlRos {
         sensor_msgs::FluidPressure::Ptr& pressure_msg);
 
     /**
+     * @brief Convert DF21/DF22 data into depth odometry message
+     * @param[in] track_msg the whole DF21/DF22 ROS message
+     * @param[out] depth_odom_msg the odometry message only using depth
+     * 
+     * Convert the gauge pressure to depth and construct it as odometry message
+     */    
+    void TrackToDepthOdom(
+        const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
+        nav_msgs::Odometry::Ptr& depth_odom_msg);
+
+    /**
      * @brief Convert DF21/DF22 data into point cloud message
      * @param[in] track_msg the whole DF21/DF22 ROS message
      * @param[out] pc2_msg the point cloud in sensor_msgs::PointCloud2 
@@ -205,6 +229,17 @@ class NortekDvlRos {
     void ProfileToPressure(
         const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
         sensor_msgs::FluidPressure::Ptr& pressure_msg);
+
+    /**
+     * @brief Convert DF3 data into depth odometry message
+     * @param[in] profile_msg the whole DF3 ROS message
+     * @param[out] depth_odom_msg the odometry message only using depth
+     * 
+     * Convert the gauge pressure to depth and construct it as odometry message
+     */    
+    void ProfileToDepthOdom(
+        const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
+        nav_msgs::Odometry::Ptr& depth_odom_msg);
 
     /**
      * @brief Convert DF3 data into cells message
