@@ -300,8 +300,8 @@ void NortekDvlRos::TrackToDepthOdom(
     depth_odom_msg->header.stamp = track_msg->header.stamp;
     depth_odom_msg->header.frame_id = world_frame_id_;
     depth_odom_msg->child_frame_id = sensor_frame_id_;
-    // convert the pressure to depth
-    auto depth = track_msg->pressure / ( fluid_density_ * 9.81);
+    // convert the pressure (Bar) to depth
+    auto depth = (track_msg->pressure * 100000) / ( fluid_density_ * 9.81);
     // construct the odometry message
     depth_odom_msg->pose.pose.position.x = 0.0;
     depth_odom_msg->pose.pose.position.y = 0.0;
@@ -384,8 +384,8 @@ void NortekDvlRos::ProfileToDepthOdom(
     depth_odom_msg->header.stamp = profile_msg->header.stamp;
     depth_odom_msg->header.frame_id = world_frame_id_;
     depth_odom_msg->child_frame_id = sensor_frame_id_;
-    // convert the pressure to depth
-    auto depth = profile_msg->pressure / ( fluid_density_ * 9.81);
+    // convert the pressure (Bar) to depth
+    auto depth = (track_msg->pressure * 100000) / ( fluid_density_ * 9.81);
     // construct the odometry message
     depth_odom_msg->pose.pose.position.x = 0.0;
     depth_odom_msg->pose.pose.position.y = 0.0;
