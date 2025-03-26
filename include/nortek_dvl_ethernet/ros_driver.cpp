@@ -237,7 +237,7 @@ void NortekDvlRos::CallbackUDP(
 
     if(result == nortek_dvl_structs::parserID::ERROR)
     {
-        ROS_ERROR("parsed something wroing");
+        ROS_ERROR("%s: parsed something wrong", ros::this_node::getName().c_str());
     }
 
 }

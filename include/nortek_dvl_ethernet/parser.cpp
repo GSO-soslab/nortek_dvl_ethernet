@@ -165,7 +165,7 @@ nortek_dvl_structs::parserID NortekDVLParser::ParseHeader(
         }
     }
 
-    std::cout<< " Error - Nortek DVL Sync ID not recognized: " << sync <<"\n";
+    std::cout<< "Error - Nortek DVL Sync ID not recognized: " << std::hex << sync <<"\n";
     return nortek_dvl_structs::ERROR;
 }
 
