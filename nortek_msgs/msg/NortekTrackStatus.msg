@@ -1,0 +1,26 @@
+# Status for DF21/DF22
+uint8 beam1_vel_valid  
+uint8 beam2_vel_valid
+uint8 beam3_vel_valid
+uint8 beam4_vel_valid  
+uint8 beam1_dist_valid
+uint8 beam2_dist_valid 
+uint8 beam3_dist_valid 
+uint8 beam4_dist_valid 
+uint8 beam1_fom_valid  
+uint8 beam2_fom_valid  
+uint8 beam3_fom_valid  
+uint8 beam4_fom_valid  
+uint8 vel_x_valid      
+uint8 vel_y_valid      
+uint8 vel_z1_valid     
+uint8 vel_z2_valid   
+uint8 fom_x_valid      
+uint8 fom_y_valid    
+uint8 fom_z1_valid     
+uint8 fom_z2_valid     
+uint8 proc_idle3 
+uint8 proc_idle6     
+uint8 proc_idle12     
+uint8 empty          
+uint8 wakeup_state    
