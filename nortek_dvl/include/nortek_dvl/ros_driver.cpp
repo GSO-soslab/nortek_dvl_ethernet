@@ -19,14 +19,12 @@
 */
 
 
-#include <nortek_dvl_ethernet/udp_socket_handler.h>
-#include <nortek_dvl_ethernet/ros_driver.h>
+#include <nortek_dvl/udp_socket_handler.h>
+#include <nortek_dvl/ros_driver.h>
 
 
-NortekDvlRos::NortekDvlRos(
-    const ros::NodeHandle &nh,
-    const ros::NodeHandle &nh_private) :
-    nh_(nh), nh_private_(nh_private)
+NortekDvlRos::NortekDvlRos()
+    : Node("nortek_dvl_ros_node")
 {
     // load parameters
     LoadParam();
@@ -38,51 +36,103 @@ NortekDvlRos::NortekDvlRos(
     InitDataInterface();
 }
 
-NortekDvlRos::~NortekDvlRos() {
-
-    //! TODO: do something
-}
-
 void NortekDvlRos::LoadParam()
 {
     // UDP configuration
-    nh_private_.param<int>("UDP/udp_rx", udp_param_.udp_rx, DEFAULT_UDP_RX);    
-    nh_private_.param<int>("UDP/udp_tx", udp_param_.udp_tx, DEFAULT_UDP_TX);    
-    nh_private_.param<std::string>("UDP/udp_address", udp_param_.udp_address, DEFAULT_UDP_ADDRESS);
-    nh_private_.param<int>("UDP/buffer_size", udp_param_.buffer_size, DEFAULT_UDP_BUFFER);    
+    this->declare_parameter<int>("UDP/udp_rx", DEFAULT_UDP_RX);
+    if (!this->get_parameter("UDP/udp_rx", udp_param_.udp_rx)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP/udp_rx: no param available!");
+    }
+    this->declare_parameter<int>("UDP/udp_tx", DEFAULT_UDP_TX);
+    if (!this->get_parameter("UDP/udp_tx", udp_param_.udp_tx)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP/udp_tx: no param available!");
+    }
+    this->declare_parameter<std::string>("UDP/udp_address", DEFAULT_UDP_ADDRESS);
+    if (!this->get_parameter("UDP/udp_address", udp_param_.udp_address)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP/udp_address: no param available!");
+    }
+    this->declare_parameter<int>("UDP/buffer_size", DEFAULT_UDP_BUFFER);
+    if (!this->get_parameter("UDP/buffer_size", udp_param_.buffer_size)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP/buffer_size: no param available!");
+    }
 
     // DVL configuration
-    nh_private_.param<double>("DVL/beam_angle", beam_angle_, 25.0);
-    nh_private_.param<double>("DVL/sound_speed", sound_speed_, 1500.0);
+    this->declare_parameter<double>("DVL/beam_angle", DEFAULT_DVL_BEAM_ANGLE);
+    if (!this->get_parameter("DVL/beam_angle", beam_angle_)) {
+        RCLCPP_ERROR(this->get_logger(), "DVL/beam_angle: no param available!");
+    }
+    this->declare_parameter<double>("DVL/sound_speed", DEFAULT_DVL_SOUND_SPEED);
+    if (!this->get_parameter("DVL/sound_speed", sound_speed_)) {
+        RCLCPP_ERROR(this->get_logger(), "DVL/sound_speed: no param available!");
+    }
+    this->declare_parameter<double>("DVL/fluid_density", DEFAULT_DVL_FLUID_DENSITY);
+    if (!this->get_parameter("DVL/fluid_density", fluid_density_)) {
+        RCLCPP_ERROR(this->get_logger(), "DVL/fluid_density: no param available!");
+    }
 
     // ROS configuration
-    nh_private_.param<std::string>("ROS/sensor_frame_id", sensor_frame_id_, "nortek_dvl");
-    nh_private_.param<std::string>("ROS/world_frame_id", world_frame_id_, "world");
-    nh_private_.param<double>("ROS/fluid_density", fluid_density_, 1023.0);
-    nh_private_.param<double>("ROS/depth_cov", depth_cov_, 0.001);
+    this->declare_parameter<std::string>("ROS/sensor_frame_id", "nortek_dvl");
+    if (!this->get_parameter("ROS/sensor_frame_id", sensor_frame_id_)) {
+        RCLCPP_ERROR(this->get_logger(), "ROS/sensor_frame_id: no param available!");
+    }
+    this->declare_parameter<std::string>("ROS/world_frame_id", "world");
+    if (!this->get_parameter("ROS/world_frame_id", world_frame_id_)) {
+        RCLCPP_ERROR(this->get_logger(), "ROS/world_frame_id: no param available!");
+    }
+    this->declare_parameter<double>("ROS/depth_cov", 0.001);
+    if (!this->get_parameter("ROS/depth_cov", depth_cov_)) {
+        RCLCPP_ERROR(this->get_logger(), "ROS/depth_cov: no param available!");
+    }
+
+    //! DEBUG:
+    std::cout<<"UDP configure: ";
+    std::cout<<" udp_rx:" << udp_param_.udp_rx <<", udp_tx:" << udp_param_.udp_tx;
+    std::cout<<" udp_address:" << udp_param_.udp_address <<", buffer_size:" << udp_param_.buffer_size;
+    std::cout<<"\n";    
+
+    std::cout<<"DVL configure: ";
+    std::cout<<" beam_angle:" << beam_angle_ <<", sound_speed:" << sound_speed_;
+    std::cout<<" fluid_density:" << fluid_density_;
+    std::cout<<"\n";     
+
+    std::cout<<"ROS configure: ";
+    std::cout<<" sensor_frame_id:" << sensor_frame_id_ <<", world_frame_id:" << world_frame_id_;
+    std::cout<<" depth_cov:" << depth_cov_;
+    std::cout<<"\n";      
 }
 
 void NortekDvlRos::SetupRos()
 {
-    bottom_track_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF2>("bottom_track", 10);
+    // ros pub
+    bottom_track_pub_ = this->create_publisher<nortek_msgs::msg::NortekDF2>(
+        "bottom_track", 10);
 
-    water_track_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF2>("water_track", 10);
+    water_track_pub_ = this->create_publisher<nortek_msgs::msg::NortekDF2>(
+        "water_track", 10);
 
-    current_profile_pub_ = nh_.advertise<nortek_dvl_ethernet::NortekDF3>("current_profile", 10);
+    current_profile_pub_ = this->create_publisher<nortek_msgs::msg::NortekDF3>(
+        "current_profile", 10);
 
-    bt_velocity_pub_ = nh_.advertise<geometry_msgs::TwistWithCovarianceStamped>("bt_velocity", 10);
+    bt_velocity_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
+        "bt_velocity", 10);
 
-    bt_pc2_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("bt_pointcloud", 10);
+    bt_pc2_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+        "bt_pointcloud", 10);
 
-    bt_range_pub_ = nh_.advertise<sensor_msgs::Range>("bt_range", 10);
-    
-    wt_velocity_pub_ = nh_.advertise<geometry_msgs::TwistWithCovarianceStamped>("wt_velocity", 10);
+    bt_range_pub_ = this->create_publisher<sensor_msgs::msg::Range>(
+        "bt_range", 10);
 
-    // cp_cells_pub_ = nh_.advertise<nav_msgs::GridCells>("cp_cells", 5);
+    wt_velocity_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
+        "wt_velocity", 10);
 
-    pressure_pub_ = nh_.advertise<sensor_msgs::FluidPressure>("pressure", 10);
+    // cp_cells_pub_ = this->create_publisher<nav_msgs::msg::GridCells>(
+    //     "cp_cells", 5);
 
-    depth_pub_ = nh_.advertise<nav_msgs::Odometry>("depth_odometry", 10);
+    pressure_pub_ = this->create_publisher<sensor_msgs::msg::FluidPressure>(
+        "pressure", 10);
+
+    depth_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
+        "depth_odometry", 10);
 }
 
 void NortekDvlRos::InitDataInterface()
@@ -111,112 +161,102 @@ void NortekDvlRos::InitDataInterface()
 }
 
 void NortekDvlRos::CallbackBT(
-    const nortek_dvl_ethernet::NortekDF2& msg)
+    const nortek_msgs::msg::NortekDF2& msg)
 {
     // ===================================================================== //
     // publish bottom track message 
     // ===================================================================== //
 
-    nortek_dvl_ethernet::NortekDF2::Ptr track_msg(
-        new nortek_dvl_ethernet::NortekDF2(msg));
+    auto track_msg = std::make_shared<nortek_msgs::msg::NortekDF2>(msg);
     track_msg->header.frame_id = sensor_frame_id_;
-    bottom_track_pub_.publish(track_msg);
+    bottom_track_pub_->publish(*track_msg);
 
     // ===================================================================== //
     // publish twist message
     // ===================================================================== //
 
-    geometry_msgs::TwistWithCovarianceStamped::Ptr twist_msg(
-        new geometry_msgs::TwistWithCovarianceStamped);
-
+    auto twist_msg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
     TrackToVelocity(track_msg, twist_msg);
-    bt_velocity_pub_.publish(twist_msg);
+    bt_velocity_pub_->publish(*twist_msg);
 
     // ===================================================================== //
     // publish pressure message
     // ===================================================================== //
 
-    sensor_msgs::FluidPressure::Ptr pressure_msg(
-        new sensor_msgs::FluidPressure);
+    auto pressure_msg = std::make_shared<sensor_msgs::msg::FluidPressure>();
     TrackToPressure(track_msg, pressure_msg);
-    pressure_pub_.publish(pressure_msg);
+    pressure_pub_->publish(*pressure_msg);
 
     // ===================================================================== //
     // publish depth odometry message
     // ===================================================================== //
-    nav_msgs::Odometry::Ptr depth_odom_msg(
-        new nav_msgs::Odometry);
+
+    auto depth_odom_msg = std::make_shared<nav_msgs::msg::Odometry>();
     TrackToDepthOdom(track_msg, depth_odom_msg);
-    depth_pub_.publish(depth_odom_msg);
+    depth_pub_->publish(*depth_odom_msg);
 
     // ===================================================================== //
     // publish pointcloud2 message
     // ===================================================================== //
-    sensor_msgs::PointCloud2::Ptr pc2_msg(
-        new sensor_msgs::PointCloud2);
+
+    auto pc2_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
     TrackToPC2(track_msg, pc2_msg);
-    bt_pc2_pub_.publish(pc2_msg);
+    bt_pc2_pub_->publish(*pc2_msg);
 
     // ===================================================================== //
     // publish range message
     // ===================================================================== //
-    sensor_msgs::Range::Ptr range_msg(
-        new sensor_msgs::Range);
+
+    auto range_msg = std::make_shared<sensor_msgs::msg::Range>();
     TrackToRange(track_msg, range_msg);
-    bt_range_pub_.publish(range_msg);
+    bt_range_pub_->publish(*range_msg);
 }
 
 void NortekDvlRos::CallbackWT(
-    const nortek_dvl_ethernet::NortekDF2& msg)
+    const nortek_msgs::msg::NortekDF2& msg)
 {
     // ===================================================================== //
     // publish water track message 
     // ===================================================================== //
 
-    nortek_dvl_ethernet::NortekDF2::Ptr wt_msg(
-        new nortek_dvl_ethernet::NortekDF2(msg));
+    auto wt_msg = std::make_shared<nortek_msgs::msg::NortekDF2>(msg);
     wt_msg->header.frame_id = sensor_frame_id_;
-    water_track_pub_.publish(wt_msg);
+    water_track_pub_->publish(*wt_msg);
 
     // ===================================================================== //
     // publish twist message
     // ===================================================================== //
 
-    geometry_msgs::TwistWithCovarianceStamped::Ptr twist_msg(
-        new geometry_msgs::TwistWithCovarianceStamped);
-
+    auto twist_msg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
     TrackToVelocity(wt_msg, twist_msg);
-    wt_velocity_pub_.publish(twist_msg);
+    wt_velocity_pub_->publish(*twist_msg);
 }
 
 void NortekDvlRos::CallbackCP(
-    const nortek_dvl_ethernet::NortekDF3& msg)
+    const nortek_msgs::msg::NortekDF3& msg)
 {
     // ===================================================================== //
     // publish current profile message 
     // ===================================================================== //
 
-    nortek_dvl_ethernet::NortekDF3::Ptr cp_msg(
-        new nortek_dvl_ethernet::NortekDF3(msg));
+    auto cp_msg = std::make_shared<nortek_msgs::msg::NortekDF3>(msg);
     cp_msg->header.frame_id = sensor_frame_id_;
-    current_profile_pub_.publish(cp_msg);    
+    current_profile_pub_->publish(*cp_msg);    
 
     // ===================================================================== //
     // publish pressure message 
     // ===================================================================== //
 
-    sensor_msgs::FluidPressure::Ptr pressure_msg(
-        new sensor_msgs::FluidPressure);
+    auto pressure_msg = std::make_shared<sensor_msgs::msg::FluidPressure>();
     ProfileToPressure(cp_msg, pressure_msg);
-    pressure_pub_.publish(pressure_msg);
+    pressure_pub_->publish(*pressure_msg);
 
     // ===================================================================== //
     // publish depth odometry message
     // ===================================================================== //
-    nav_msgs::Odometry::Ptr depth_odom_msg(
-        new nav_msgs::Odometry);
+    auto depth_odom_msg = std::make_shared<nav_msgs::msg::Odometry>();
     ProfileToDepthOdom(cp_msg, depth_odom_msg);
-    depth_pub_.publish(depth_odom_msg);
+    depth_pub_->publish(*depth_odom_msg);
 
     // ===================================================================== //
     // publish cells message 
@@ -231,38 +271,38 @@ void NortekDvlRos::CallbackCP(
 void NortekDvlRos::CallbackUDP(
     const uint8_t* data, std::size_t size) 
 {
-    auto io_time = ros::Time::now().toSec();
+    auto io_time = this->get_clock()->now().seconds();
 
     auto result = parser_->Parse(data, size, io_time);
 
     if(result == nortek_dvl_structs::parserID::ERROR)
     {
-        ROS_ERROR("%s: parsed something wrong", ros::this_node::getName().c_str());
+        RCLCPP_ERROR(this->get_logger(), "parsed something wrong");
     }
 
 }
 
 void NortekDvlRos::TrackToVelocity(
-    const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-    geometry_msgs::TwistWithCovarianceStamped::Ptr& twist_msg) 
+    const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+    geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr& twist_msg) 
 {
     // prepare velocity and noise (FOM - measurement white noise level)
     double velocity_x, velocity_y, velocity_z, noise_x, noise_y, noise_z;
-    velocity_x = track_msg->velX;
-    velocity_y = track_msg->velY;
-    noise_x = track_msg->fomX;
-    noise_y = track_msg->fomY;
-    if (track_msg->velZ1 == -32.768f && track_msg->velZ2 != -32.768f) {
-        velocity_z = track_msg->velZ2;
-        noise_z = track_msg->fomZ2;
+    velocity_x = track_msg->vel_x;
+    velocity_y = track_msg->vel_y;
+    noise_x = track_msg->fom_x;
+    noise_y = track_msg->fom_y;
+    if (track_msg->vel_z1 == -32.768f && track_msg->vel_z2 != -32.768f) {
+        velocity_z = track_msg->vel_z2;
+        noise_z = track_msg->fom_z2;
     }
-    else if (track_msg->velZ1 != -32.768f && track_msg->velZ2 == -32.768f){
-        velocity_z = track_msg->velZ1;
-        noise_z = track_msg->fomZ1;
+    else if (track_msg->vel_z1 != -32.768f && track_msg->vel_z2 == -32.768f){
+        velocity_z = track_msg->vel_z1;
+        noise_z = track_msg->fom_z1;
     }
     else {
-        velocity_z = (track_msg->velZ1 + track_msg->velZ2)/ 2.0;
-        noise_z = (track_msg->fomZ1 + track_msg->fomZ2) / 2.0;
+        velocity_z = (track_msg->vel_z1 + track_msg->vel_z2)/ 2.0;
+        noise_z = (track_msg->fom_z1 + track_msg->fom_z2) / 2.0;
     }        
 
     // get the scale in case sound speed is different
@@ -281,8 +321,8 @@ void NortekDvlRos::TrackToVelocity(
 }
 
 void NortekDvlRos::TrackToPressure(
-    const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-    sensor_msgs::FluidPressure::Ptr& pressure_msg) 
+    const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+    sensor_msgs::msg::FluidPressure::SharedPtr& pressure_msg) 
 {
     pressure_msg->header = track_msg->header;
     pressure_msg->fluid_pressure = (track_msg->pressure + 1.01325) * 100000;
@@ -293,8 +333,8 @@ void NortekDvlRos::TrackToPressure(
 }
 
 void NortekDvlRos::TrackToDepthOdom(
-    const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-    nav_msgs::Odometry::Ptr& depth_odom_msg)
+    const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+    nav_msgs::msg::Odometry::SharedPtr& depth_odom_msg)
 {
     // header
     depth_odom_msg->header.stamp = track_msg->header.stamp;
@@ -309,38 +349,70 @@ void NortekDvlRos::TrackToDepthOdom(
     depth_odom_msg->pose.covariance[6 * 2 + 2] = depth_cov_;
 }
 
-
 void NortekDvlRos::TrackToPC2(
-    const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-    sensor_msgs::PointCloud2::Ptr& pc2_msg) 
+    const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+    sensor_msgs::msg::PointCloud2::SharedPtr& pc2_msg) 
 {
-    // 4 beams generated pointcloud with only XYZ property
-    sensor_msgs::PointCloud2Modifier modifier(*pc2_msg);
-    modifier.setPointCloud2FieldsByString(1, "xyz");    
-    modifier.resize(4); 
+    // ===================================================================== //
+    // msg property: 4 points with only XYZ
+    // ===================================================================== //
+    pc2_msg->height = 1;
+    // total points
+    pc2_msg->width = 4;
+    // fill the field: x,y,z
+    sensor_msgs::msg::PointField field;
+    field.count = 1;
+    field.datatype = sensor_msgs::msg::PointField::FLOAT32;
+    field.name = "x";
+    field.offset = 0;
+    pc2_msg->fields.push_back(field);
+    field.name = "y";
+    field.offset = 4;
+    pc2_msg->fields.push_back(field);
+    field.name = "z";
+    field.offset = 8;
+    pc2_msg->fields.push_back(field);
+    // total size of one point: 4 bytes * 3
+    pc2_msg->point_step = 12;
+    pc2_msg->row_step = pc2_msg->point_step * pc2_msg->width;
+    pc2_msg->data.resize(pc2_msg->row_step * pc2_msg->height);
+    pc2_msg->is_bigendian = false;
+    pc2_msg->is_dense = true;
 
-    // get the scale in case sound speed is different
+    // ===================================================================== //
+    // get the actual point data
+    // ===================================================================== //
+
+    // get the scale in case sound speed is not right in DVL setting
     double scale = sound_speed_ / track_msg->speed_sound;
 
     // re-generate 3D location of target point
     std::vector<Eigen::Vector3d> points;
-    double beam_angle = beam_angle_*M_PI/180;
+    double beam_angle = beam_angle_ * M_PI/180;
 
     double beam_azimuth[] = {M_PI/4.0, -M_PI/4.0, -3.0*M_PI/4.0, 3.0*M_PI/4.0};
-    for (int i = 0; i < 4; i++) {
+    for (unsigned int i = 0; i < pc2_msg->width; i++) {
         Eigen::Vector3d pt;
-        pt(0) = track_msg->distBeam[i] * scale * tan(beam_angle) * cos(beam_azimuth[i]);
-        pt(1) = track_msg->distBeam[i] * scale * tan(beam_angle) * sin(beam_azimuth[i]);
-        pt(2) = track_msg->distBeam[i] * scale;
+        pt(0) = 
+            track_msg->beam_dist[i] * scale * tan(beam_angle) * cos(beam_azimuth[i]);
+        pt(1) = 
+            track_msg->beam_dist[i] * scale * tan(beam_angle) * sin(beam_azimuth[i]);
+        pt(2) = 
+            track_msg->beam_dist[i] * scale;
         points.push_back(pt);
     }
+
+    // ===================================================================== //
+    // fill the ros msg
+    // ===================================================================== //
 
     // fill the XYZ
     sensor_msgs::PointCloud2Iterator<float> ros_pc2_x(*pc2_msg, "x");
     sensor_msgs::PointCloud2Iterator<float> ros_pc2_y(*pc2_msg, "y");
     sensor_msgs::PointCloud2Iterator<float> ros_pc2_z(*pc2_msg, "z");
 
-    for (size_t i = 0; i < 4; i++, ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z) {
+    for (unsigned int i = 0; i < pc2_msg->width; i++, 
+         ++ros_pc2_x, ++ros_pc2_y, ++ros_pc2_z) {
         const Eigen::Vector3d& point = points.at(i);
         *ros_pc2_x = point(0);
         *ros_pc2_y = point(1);
@@ -352,11 +424,11 @@ void NortekDvlRos::TrackToPC2(
 }
 
 void NortekDvlRos::TrackToRange(
-    const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-    sensor_msgs::Range::Ptr& range_msg) 
+    const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+    sensor_msgs::msg::Range::SharedPtr& range_msg) 
 {
     range_msg->header = track_msg->header;
-    range_msg->radiation_type = sensor_msgs::Range::ULTRASOUND;
+    range_msg->radiation_type = sensor_msgs::msg::Range::ULTRASOUND;
     //! TODO: from Technical specifications, the altitude seems from 0.2~75m,
     //        but from web interface, the max only can be set is 61.62m 
     range_msg->min_range = 0.2;
@@ -365,8 +437,8 @@ void NortekDvlRos::TrackToRange(
 }
 
 void NortekDvlRos::ProfileToPressure(
-    const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
-    sensor_msgs::FluidPressure::Ptr& pressure_msg) 
+    const nortek_msgs::msg::NortekDF3::ConstSharedPtr& profile_msg, 
+    sensor_msgs::msg::FluidPressure::SharedPtr& pressure_msg) 
 {
     pressure_msg->header = profile_msg->header;
     pressure_msg->fluid_pressure = (profile_msg->pressure + 1.01325) * 100000;
@@ -377,8 +449,8 @@ void NortekDvlRos::ProfileToPressure(
 }
 
 void NortekDvlRos::ProfileToDepthOdom(
-    const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
-    nav_msgs::Odometry::Ptr& depth_odom_msg)
+    const nortek_msgs::msg::NortekDF3::ConstSharedPtr& profile_msg, 
+    nav_msgs::msg::Odometry::SharedPtr& depth_odom_msg)
 {
     // header
     depth_odom_msg->header.stamp = profile_msg->header.stamp;

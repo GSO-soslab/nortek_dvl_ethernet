@@ -30,4 +30,12 @@
 #define DEFAULT_UDP_ADDRESS "127.0.0.1"
 #define DEFAULT_UDP_BUFFER 512
 
+// ========================================================================= //
+// DVL related
+// ========================================================================= //
+
+#define DEFAULT_DVL_BEAM_ANGLE 25.0
+#define DEFAULT_DVL_SOUND_SPEED 1500.0
+#define DEFAULT_DVL_FLUID_DENSITY 1023.0 
+
 #endif // NORTEK_DVL_ETHERNET_DEFAULT_

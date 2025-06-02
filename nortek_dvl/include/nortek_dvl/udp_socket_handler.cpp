@@ -18,7 +18,7 @@
     Copyright (C) 2024 Smart Ocean Systems Laboratory
 */
 
-#include <nortek_dvl_ethernet/udp_socket_handler.h>
+#include <nortek_dvl/udp_socket_handler.h>
 
 UDPSocketHandler::UDPSocketHandler(const UdpParam& param) 
     : io_service_(), socket_(io_service_), param_(param)

@@ -18,25 +18,38 @@
     Copyright (C) 2024 Smart Ocean Systems Laboratory
 */
 
-#include "ros/ros.h"
-#include <nortek_dvl_ethernet/udp_socket_handler.h>
-#include <nortek_dvl_ethernet/ros_driver.h>
+// #include "ros/ros.h"
+// #include <nortek_dvl_ethernet/udp_socket_handler.h>
+// #include <nortek_dvl_ethernet/ros_driver.h>
 
-int main(int argc, char** argv) {
+// int main(int argc, char** argv) {
 
-    ros::init(argc, argv,"Nortek_DVL1000_ROS_driver");
+//     ros::init(argc, argv,"Nortek_DVL1000_ROS_driver");
 
-    ros::NodeHandle nh("");
-    ros::NodeHandle nh_private("~");
+//     ros::NodeHandle nh("");
+//     ros::NodeHandle nh_private("~");
 
-    NortekDvlRos node(nh, nh_private);
+//     NortekDvlRos node(nh, nh_private);
 
-    // Use ROS spinner to handle callbacks
-    ros::AsyncSpinner spinner(2);
-    spinner.start();
+//     // Use ROS spinner to handle callbacks
+//     ros::AsyncSpinner spinner(2);
+//     spinner.start();
 
-    // Keep the main thread alive
-    ros::waitForShutdown();
-    return 0;
+//     // Keep the main thread alive
+//     ros::waitForShutdown();
+//     return 0;
+// }
+
+
+#include <rclcpp/rclcpp.hpp>
+#include <nortek_dvl/ros_driver.h>
+
+int main(int argc, char **argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<NortekDvlRos>();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
 }
 

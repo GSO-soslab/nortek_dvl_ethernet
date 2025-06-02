@@ -26,12 +26,12 @@
 #include <ctime>
 #include <chrono>
 #include <iomanip>
-#include <nortek_dvl_ethernet/nortekdvl1000_structs.h>
-#include <nortek_dvl_ethernet/NortekDF2.h>
-#include <nortek_dvl_ethernet/NortekDF3.h>
-#include "boost/date_time/posix_time/posix_time.hpp"
-#include <boost/date_time/gregorian/gregorian.hpp>
 
+#include <nortek_dvl/nortekdvl1000_structs.h>
+#include <nortek_dvl/helper.h>
+
+#include <nortek_msgs/msg/nortek_df2.hpp>
+#include <nortek_msgs/msg/nortek_df3.hpp>
 /**
  * @brief This is the parser for Nortek DVL1000 Ethernet binary data
  *
@@ -48,7 +48,7 @@ private:
 
     /**
      * @brief Sets up a callback to receive the bottom track data
-     * @param[in] message  A ROS message struct nortek_dvl_ethernet::NortekDF2 
+     * @param[in] message  A ROS message struct nortek_msgs::msg::NortekDF2 
      * that contain all the data parsed from bottom track. 
      *
      * This function allows the user to define a callback that will be invoked 
@@ -56,12 +56,12 @@ private:
      * constant reference to a `NortekDF2` object, which contains the bottom 
      * track data from the Nortek DVL Ethernet device.
      */
-    std::function <void(const nortek_dvl_ethernet::NortekDF2&)> 
+    std::function <void(const nortek_msgs::msg::NortekDF2&)> 
         bottom_track_callback_;
 
     /**
      * @brief Sets up a callback to receive the water track data
-     * @param[in] message  A ROS message struct nortek_dvl_ethernet::NortekDF2 
+     * @param[in] message  A ROS message struct nortek_msgs::msg::NortekDF2 
      * that contain all the data parsed from water track. 
      *
      * This function allows the user to define a callback that will be invoked 
@@ -69,12 +69,12 @@ private:
      * constant reference to a `NortekDF2` object, which contains the water 
      * track data from the Nortek DVL Ethernet device.
      */
-    std::function <void(const nortek_dvl_ethernet::NortekDF2&)> 
+    std::function <void(const nortek_msgs::msg::NortekDF2&)> 
         water_track_callback_;
 
     /**
      * @brief Sets up a callback to receive the current profile data
-     * @param[in] message  A ROS message struct nortek_dvl_ethernet::NortekDF3 
+     * @param[in] message  A ROS message struct nortek_msgs::msg::NortekDF3 
      * that contain all the data parsed from current profile. 
      *
      * This function allows the user to define a callback that will be invoked 
@@ -82,7 +82,7 @@ private:
      * constant reference to a `NortekDF3` object, which contains the current 
      * profile data from the Nortek DVL Ethernet device.
      */
-    std::function <void(const nortek_dvl_ethernet::NortekDF3&)> 
+    std::function <void(const nortek_msgs::msg::NortekDF3&)> 
         current_profile_callback_;
 
     /**
@@ -127,7 +127,7 @@ private:
         const uint8_t* buffer, 
         uint8_t& head_size, 
         const double io_time, 
-        nortek_dvl_ethernet::NortekDF2* df2_msg);
+        nortek_msgs::msg::NortekDF2* df2_msg);
 
     /**
      * @brief Parse the DF3 data besides the header
@@ -143,7 +143,7 @@ private:
         const uint8_t* buffer, 
         uint8_t& head_size, 
         const double io_time, 
-        nortek_dvl_ethernet::NortekDF3* df3_msg);
+        nortek_msgs::msg::NortekDF3* df3_msg);
 
     /**
      * @brief Parse the DF21/DF22 raw data structure to ROS message structure
@@ -157,7 +157,7 @@ private:
     void ToDF2(
         const double io_time, 
         const nortek_dvl_structs::TrackData& data, 
-        nortek_dvl_ethernet::NortekDF2* df2_msg);    
+        nortek_msgs::msg::NortekDF2* df2_msg);    
 
     /**
      * @brief Parse the DF3 raw data structure to ROS message structure
@@ -174,24 +174,7 @@ private:
         const double io_time, 
         const nortek_dvl_structs::ProfileData& data, 
         const nortek_dvl_structs::ProfileCells& cells, 
-        nortek_dvl_ethernet::NortekDF3* df3_msg);  
-
-    /**
-     * @brief Parse the DF3 raw data structure to ROS message structure
-     * @param[in] io_time  the I/O timestamp, recorded as the parser received this data, 
-     *                     it's not the time then the data arrived the computer but close.
-     * @param[in] data  the profile buffer data that aligned with defined structure 
-     * @param[in] cell  the cell buffer data that aligned with defined structure, 
-     *                  which is fixed size 
-     * @param[out] df3_msg  the ROS message data structure of DF3 data
-     *
-     * It convert the buffer aligned DF3 data to the ROS msg, use the fixed size of cells
-     */
-    void ToDF3(
-        const double io_time, 
-        const nortek_dvl_structs::ProfileData& data, 
-        const nortek_dvl_structs::ProfileCellsSimple& cells, 
-        nortek_dvl_ethernet::NortekDF3* df3_msg);  
+        nortek_msgs::msg::NortekDF3* df3_msg);  
 
     /**
      * @brief Parse dynamic size cell data 

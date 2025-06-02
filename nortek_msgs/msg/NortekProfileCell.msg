@@ -5,7 +5,7 @@ int16 num           # id of each cell data
 float32 pos         # [m]
 float32 vel_x       # [m/s]
 float32 vel_y       # [m/s]
-float32 vel_z       # [m/s]
+float32 vel_z1      # [m/s]
 float32 vel_z2      # [m/s]
 uint8 amp1          # [dB]
 uint8 amp2          # [dB]

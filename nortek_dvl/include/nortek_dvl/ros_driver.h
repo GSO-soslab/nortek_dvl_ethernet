@@ -22,24 +22,24 @@
 #define NORTEK_DVL_ETHERNET_ROS_DRIVER_
 
 #include <Eigen/Dense>
-#include <ros/ros.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/String.h>
-#include <geometry_msgs/TwistWithCovarianceStamped.h>
-#include <sensor_msgs/FluidPressure.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/point_cloud2_iterator.h>
-#include <sensor_msgs/Range.h>
-#include <nav_msgs/Odometry.h>
-// #include <nav_msgs/GridCells.h>
-// #include <geometry_msgs/Point.h>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <std_msgs/msg/string.hpp>
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <sensor_msgs/msg/fluid_pressure.hpp>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/point_cloud2_iterator.hpp>
+#include <sensor_msgs/msg/range.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+#include <nortek_msgs/msg/nortek_df2.hpp>
+#include <nortek_msgs/msg/nortek_df3.hpp>
+// #include <nav_msgs/msg/grid_cells.hpp>
+// #include <geometry_msgs/msg/point.hpp>
 
-#include <nortek_dvl_ethernet/default.h>
-#include <nortek_dvl_ethernet/udp_socket_handler.h>
-#include <nortek_dvl_ethernet/nortekdvl1000_structs.h>
-#include <nortek_dvl_ethernet/parser.h>
-#include <nortek_dvl_ethernet/NortekDF2.h>
-#include <nortek_dvl_ethernet/NortekDF3.h>
+#include <nortek_dvl/default.h>
+#include <nortek_dvl/udp_socket_handler.h>
+#include <nortek_dvl/nortekdvl1000_structs.h>
+#include <nortek_dvl/parser.h>
 
 /**
  * @brief This is the ROS driver class for Nortek DVL1000
@@ -47,45 +47,60 @@
  * It get the bottom track, water track and current profile from the Parser through callback functions.
  * After that, individual derivated message in ROS standard message will be publish, such as velocity in twist. 
  */
-class NortekDvlRos {
+class NortekDvlRos : public rclcpp::Node
+{
+public:
+    NortekDvlRos();
 
-    //! node handler
-    ros::NodeHandle nh_;
-
-    //! private node handler
-    ros::NodeHandle nh_private_;
+private:
+    // ===================================================================== //
+    // ROS variables
+    // ===================================================================== // 
 
     //! bottom track publisher
-    ros::Publisher bottom_track_pub_;
+    rclcpp::Publisher<nortek_msgs::msg::NortekDF2>::SharedPtr 
+        bottom_track_pub_;
 
     //! water track publisher
-    ros::Publisher water_track_pub_;
-
+    rclcpp::Publisher<nortek_msgs::msg::NortekDF2>::SharedPtr 
+        water_track_pub_;   
+        
     //! current proflie publisher
-    ros::Publisher current_profile_pub_;
+    rclcpp::Publisher<nortek_msgs::msg::NortekDF3>::SharedPtr 
+        current_profile_pub_;   
 
     //! bottom track 3-axis velocity publisher
-    ros::Publisher bt_velocity_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr 
+        bt_velocity_pub_;   
 
     //! bottom track point cloud (4 points) publisher
-    ros::Publisher bt_pc2_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr 
+        bt_pc2_pub_;  
 
     //! bottom track range (averaged from 4 beams) publisher
-    ros::Publisher bt_range_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr 
+        bt_range_pub_;  
 
     //! water track 3-axis velocity publisher
-    ros::Publisher wt_velocity_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr 
+        wt_velocity_pub_;  
 
     //! current profile cells publisher
-    ros::Publisher cp_cells_pub_;
+    // rclcpp::Publisher<nav_msgs::msg::GridCells>::SharedPtr 
+    //     cp_cells_pub_;     
 
     //! pressure from bottom track and current profile publisher
-    ros::Publisher pressure_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::FluidPressure>::SharedPtr 
+        pressure_pub_; 
 
     //! depth odometry from bottom track and current profile publisher
-    ros::Publisher depth_pub_;    
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr 
+        depth_pub_; 
 
-    //! ROS related parameters:
+    // ===================================================================== //
+    // ROS related parameters:
+    // ===================================================================== //
+
     //!  frame_id of published messages
     std::string sensor_frame_id_;
 
@@ -100,12 +115,14 @@ class NortekDvlRos {
 
     //! UDP related parameters
     UdpParam udp_param_;
-    
-    //! Nortek related parameters: 
+     
     //!  the angle between individual beam and DVL center line
     double beam_angle_;
 
-    //! Nortek related parameters: 
+    // ===================================================================== //
+    // Nortek related parameters: 
+    // ===================================================================== //       
+
     //!  given sound speed, correct the default sound speed used in DVL
     double sound_speed_;
 
@@ -113,7 +130,11 @@ class NortekDvlRos {
     std::shared_ptr<UDPSocketHandler> udp_handler_;
 
     //! Nortek parser object pointer
-    std::shared_ptr<NortekDVLParser> parser_;
+    std::shared_ptr<NortekDVLParser> parser_;        
+
+    // ===================================================================== //
+    // Functions
+    // ===================================================================== //     
 
     /**
      * @brief Load ROS parameters
@@ -144,24 +165,24 @@ class NortekDvlRos {
 
     /**
      * @brief Registered callback function to receive Nortek Bottom Track data
-     * @param msg nortek_dvl_ethernet::NortekDF2 type ROS message
+     * @param msg nortek_msgs::msg::NortekDF2 type ROS message
      */  
     void CallbackBT(
-        const nortek_dvl_ethernet::NortekDF2& msg);
+        const nortek_msgs::msg::NortekDF2& msg);
 
     /**
      * @brief Registered callback function to receive Nortek Water Track data
-     * @param msg nortek_dvl_ethernet::NortekDF2 type ROS message
+     * @param msg nortek_msgs::msg::NortekDF2 type ROS message
      */  
     void CallbackWT(
-        const nortek_dvl_ethernet::NortekDF2& msg);
+        const nortek_msgs::msg::NortekDF2& msg);
 
     /**
      * @brief Registered callback function to receive Nortek Current Profile data
-     * @param msg nortek_dvl_ethernet::NortekDF3 type ROS message
+     * @param msg nortek_msgs::msg::NortekDF3 type ROS message
      */  
     void CallbackCP(
-        const nortek_dvl_ethernet::NortekDF3& msg);
+        const nortek_msgs::msg::NortekDF3& msg);
 
     /**
      * @brief Convert DF21/DF22 data into velocity message
@@ -169,8 +190,8 @@ class NortekDvlRos {
      * @param[out] twist_msg the 3-axis linear velocity in geometry_msgs::TwistWithCovarianceStamped 
      */
     void TrackToVelocity(
-        const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-        geometry_msgs::TwistWithCovarianceStamped::Ptr& twist_msg);
+        const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+        geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr& twist_msg);
 
     /**
      * @brief Convert DF21/DF22 data into pressure message
@@ -181,8 +202,8 @@ class NortekDvlRos {
      * FluidPressure need absolute pressure unit in Pascal.
      */    
     void TrackToPressure(
-        const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-        sensor_msgs::FluidPressure::Ptr& pressure_msg);
+        const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+        sensor_msgs::msg::FluidPressure::SharedPtr& pressure_msg);
 
     /**
      * @brief Convert DF21/DF22 data into depth odometry message
@@ -192,8 +213,8 @@ class NortekDvlRos {
      * Convert the gauge pressure to depth and construct it as odometry message
      */    
     void TrackToDepthOdom(
-        const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-        nav_msgs::Odometry::Ptr& depth_odom_msg);
+        const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+        nav_msgs::msg::Odometry::SharedPtr& depth_odom_msg);
 
     /**
      * @brief Convert DF21/DF22 data into point cloud message
@@ -204,8 +225,8 @@ class NortekDvlRos {
      * we reverse the range into 3D points based on beam angle and beam location
      */    
     void TrackToPC2(
-        const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-        sensor_msgs::PointCloud2::Ptr& pc2_msg);
+        const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+        sensor_msgs::msg::PointCloud2::SharedPtr& pc2_msg);
 
     /**
      * @brief Convert DF21/DF22 data into range message
@@ -215,8 +236,8 @@ class NortekDvlRos {
      * This is a roughly estimation, just simple averaged from 4 beam ranges
      */ 
     void TrackToRange(
-        const nortek_dvl_ethernet::NortekDF2::Ptr& track_msg, 
-        sensor_msgs::Range::Ptr& range_msg);
+        const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
+        sensor_msgs::msg::Range::SharedPtr& range_msg);
 
     /**
      * @brief Convert DF3 data into pressure message
@@ -227,8 +248,8 @@ class NortekDvlRos {
      * FluidPressure need absolute pressure unit in Pascal.
      */ 
     void ProfileToPressure(
-        const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
-        sensor_msgs::FluidPressure::Ptr& pressure_msg);
+        const nortek_msgs::msg::NortekDF3::ConstSharedPtr& profile_msg, 
+        sensor_msgs::msg::FluidPressure::SharedPtr& pressure_msg);
 
     /**
      * @brief Convert DF3 data into depth odometry message
@@ -238,8 +259,8 @@ class NortekDvlRos {
      * Convert the gauge pressure to depth and construct it as odometry message
      */    
     void ProfileToDepthOdom(
-        const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
-        nav_msgs::Odometry::Ptr& depth_odom_msg);
+        const nortek_msgs::msg::NortekDF3::ConstSharedPtr& profile_msg, 
+        nav_msgs::msg::Odometry::SharedPtr& depth_odom_msg);
 
     /**
      * @brief Convert DF3 data into cells message
@@ -261,22 +282,8 @@ class NortekDvlRos {
      *                 \ /
      */ 
     // void ProfileToCells(
-    //     const nortek_dvl_ethernet::NortekDF3::Ptr& profile_msg, 
-    //     nav_msgs::GridCells::Ptr& cells_msg);
-
-public:
-    /**
-     * @brief Default constructor
-     * @param[in] nh ROS node handler
-     * @param[in] nh_private ROS private node handler
-     */ 
-    NortekDvlRos(const ros::NodeHandle &nh,
-                 const ros::NodeHandle &nh_private);
-
-    /**
-     * @brief Default Destructor
-     */ 
-    ~NortekDvlRos();    
+    //     const nortek_msgs::msg::NortekDF3::ConstSharedPtr& profile_msg, 
+    //     nav_msgs::msg::GridCells::SharedPtr& cells_msg);    
 };
 
 #endif // NORTEK_DVL_ETHERNET_ROS_DRIVER_

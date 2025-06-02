@@ -29,7 +29,7 @@
 #include <functional>
 
 // customized
-#include <nortek_dvl_ethernet/parameters.h>
+#include <nortek_dvl/parameters.h>
 
 /**
  * @brief This is the UDP handler class for data receiving using socket
