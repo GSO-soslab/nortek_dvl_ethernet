@@ -5,6 +5,8 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+    robot = 'test'
+    
     param = os.path.join(
         get_package_share_directory('nortek_dvl'),
         'config',
@@ -18,6 +20,7 @@ def generate_launch_description():
             executable="nortek_dvl_node",
             name="nortek_dvl_node",
             output="screen",
+            namespace=robot,
             parameters=[param],
             emulate_tty=True        
         ),

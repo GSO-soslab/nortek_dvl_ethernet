@@ -39,49 +39,49 @@ NortekDvlRos::NortekDvlRos()
 void NortekDvlRos::LoadParam()
 {
     // UDP configuration
-    this->declare_parameter<int>("UDP/udp_rx", DEFAULT_UDP_RX);
-    if (!this->get_parameter("UDP/udp_rx", udp_param_.udp_rx)) {
-        RCLCPP_ERROR(this->get_logger(), "UDP/udp_rx: no param available!");
+    this->declare_parameter<int>("UDP.udp_rx", DEFAULT_UDP_RX);
+    if (!this->get_parameter("UDP.udp_rx", udp_param_.udp_rx)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP.udp_rx: no param available!");
     }
-    this->declare_parameter<int>("UDP/udp_tx", DEFAULT_UDP_TX);
-    if (!this->get_parameter("UDP/udp_tx", udp_param_.udp_tx)) {
-        RCLCPP_ERROR(this->get_logger(), "UDP/udp_tx: no param available!");
+    this->declare_parameter<int>("UDP.udp_tx", DEFAULT_UDP_TX);
+    if (!this->get_parameter("UDP.udp_tx", udp_param_.udp_tx)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP.udp_tx: no param available!");
     }
-    this->declare_parameter<std::string>("UDP/udp_address", DEFAULT_UDP_ADDRESS);
-    if (!this->get_parameter("UDP/udp_address", udp_param_.udp_address)) {
-        RCLCPP_ERROR(this->get_logger(), "UDP/udp_address: no param available!");
+    this->declare_parameter<std::string>("UDP.udp_address", DEFAULT_UDP_ADDRESS);
+    if (!this->get_parameter("UDP.udp_address", udp_param_.udp_address)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP.udp_address: no param available!");
     }
-    this->declare_parameter<int>("UDP/buffer_size", DEFAULT_UDP_BUFFER);
-    if (!this->get_parameter("UDP/buffer_size", udp_param_.buffer_size)) {
-        RCLCPP_ERROR(this->get_logger(), "UDP/buffer_size: no param available!");
+    this->declare_parameter<int>("UDP.buffer_size", DEFAULT_UDP_BUFFER);
+    if (!this->get_parameter("UDP.buffer_size", udp_param_.buffer_size)) {
+        RCLCPP_ERROR(this->get_logger(), "UDP.buffer_size: no param available!");
     }
 
     // DVL configuration
-    this->declare_parameter<double>("DVL/beam_angle", DEFAULT_DVL_BEAM_ANGLE);
-    if (!this->get_parameter("DVL/beam_angle", beam_angle_)) {
-        RCLCPP_ERROR(this->get_logger(), "DVL/beam_angle: no param available!");
+    this->declare_parameter<double>("DVL.beam_angle", DEFAULT_DVL_BEAM_ANGLE);
+    if (!this->get_parameter("DVL.beam_angle", beam_angle_)) {
+        RCLCPP_ERROR(this->get_logger(), "DVL.beam_angle: no param available!");
     }
-    this->declare_parameter<double>("DVL/sound_speed", DEFAULT_DVL_SOUND_SPEED);
-    if (!this->get_parameter("DVL/sound_speed", sound_speed_)) {
-        RCLCPP_ERROR(this->get_logger(), "DVL/sound_speed: no param available!");
+    this->declare_parameter<double>("DVL.sound_speed", DEFAULT_DVL_SOUND_SPEED);
+    if (!this->get_parameter("DVL.sound_speed", sound_speed_)) {
+        RCLCPP_ERROR(this->get_logger(), "DVL.sound_speed: no param available!");
     }
-    this->declare_parameter<double>("DVL/fluid_density", DEFAULT_DVL_FLUID_DENSITY);
-    if (!this->get_parameter("DVL/fluid_density", fluid_density_)) {
-        RCLCPP_ERROR(this->get_logger(), "DVL/fluid_density: no param available!");
+    this->declare_parameter<double>("DVL.fluid_density", DEFAULT_DVL_FLUID_DENSITY);
+    if (!this->get_parameter("DVL.fluid_density", fluid_density_)) {
+        RCLCPP_ERROR(this->get_logger(), "DVL.fluid_density: no param available!");
     }
 
     // ROS configuration
-    this->declare_parameter<std::string>("ROS/sensor_frame_id", "nortek_dvl");
-    if (!this->get_parameter("ROS/sensor_frame_id", sensor_frame_id_)) {
-        RCLCPP_ERROR(this->get_logger(), "ROS/sensor_frame_id: no param available!");
+    this->declare_parameter<std::string>("ROS.sensor_frame_id", "nortek_dvl");
+    if (!this->get_parameter("ROS.sensor_frame_id", sensor_frame_id_)) {
+        RCLCPP_ERROR(this->get_logger(), "ROS.sensor_frame_id: no param available!");
     }
-    this->declare_parameter<std::string>("ROS/world_frame_id", "world");
-    if (!this->get_parameter("ROS/world_frame_id", world_frame_id_)) {
-        RCLCPP_ERROR(this->get_logger(), "ROS/world_frame_id: no param available!");
+    this->declare_parameter<std::string>("ROS.world_frame_id", "world");
+    if (!this->get_parameter("ROS.world_frame_id", world_frame_id_)) {
+        RCLCPP_ERROR(this->get_logger(), "ROS.world_frame_id: no param available!");
     }
-    this->declare_parameter<double>("ROS/depth_cov", 0.001);
-    if (!this->get_parameter("ROS/depth_cov", depth_cov_)) {
-        RCLCPP_ERROR(this->get_logger(), "ROS/depth_cov: no param available!");
+    this->declare_parameter<double>("ROS.depth_cov", 0.001);
+    if (!this->get_parameter("ROS.depth_cov", depth_cov_)) {
+        RCLCPP_ERROR(this->get_logger(), "ROS.depth_cov: no param available!");
     }
 
     //! DEBUG:
