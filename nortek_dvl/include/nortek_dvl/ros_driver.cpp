@@ -105,34 +105,34 @@ void NortekDvlRos::SetupRos()
 {
     // ros pub
     bottom_track_pub_ = this->create_publisher<nortek_msgs::msg::NortekDF2>(
-        "bottom_track", 10);
+        "~/bottom_track", 10);
 
     water_track_pub_ = this->create_publisher<nortek_msgs::msg::NortekDF2>(
-        "water_track", 10);
+        "~/water_track", 10);
 
     current_profile_pub_ = this->create_publisher<nortek_msgs::msg::NortekDF3>(
-        "current_profile", 10);
+        "~/current_profile", 10);
 
     bt_velocity_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
-        "bt_velocity", 10);
+        "~/bt_velocity", 10);
 
     bt_pc2_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-        "bt_pointcloud", 10);
+        "~/bt_pointcloud", 10);
 
     bt_range_pub_ = this->create_publisher<sensor_msgs::msg::Range>(
-        "bt_range", 10);
+        "~/bt_range", 10);
 
     wt_velocity_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
-        "wt_velocity", 10);
+        "~/wt_velocity", 10);
 
     // cp_cells_pub_ = this->create_publisher<nav_msgs::msg::GridCells>(
     //     "cp_cells", 5);
 
     pressure_pub_ = this->create_publisher<sensor_msgs::msg::FluidPressure>(
-        "pressure", 10);
+        "~/pressure", 10);
 
     depth_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(
-        "depth_odometry", 10);
+        "~/depth_odometry", 10);
 }
 
 void NortekDvlRos::InitDataInterface()
