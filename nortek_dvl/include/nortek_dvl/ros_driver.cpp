@@ -119,8 +119,8 @@ void NortekDvlRos::SetupRos()
     bt_pc2_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
         "~/bt_pointcloud", 10);
 
-    bt_range_pub_ = this->create_publisher<sensor_msgs::msg::Range>(
-        "~/bt_range", 10);
+    bt_altitude_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>(
+        "~/bt_altitude", 10);
 
     wt_velocity_pub_ = this->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
         "~/wt_velocity", 10);
@@ -204,12 +204,12 @@ void NortekDvlRos::CallbackBT(
     bt_pc2_pub_->publish(*pc2_msg);
 
     // ===================================================================== //
-    // publish range message
+    // publish altitude message
     // ===================================================================== //
 
-    auto range_msg = std::make_shared<sensor_msgs::msg::Range>();
-    TrackToRange(track_msg, range_msg);
-    bt_range_pub_->publish(*range_msg);
+    auto altitude_msg = std::make_shared<geometry_msgs::msg::PointStamped>();
+    TrackToAltitude(track_msg, altitude_msg);
+    bt_altitude_pub_->publish(*altitude_msg);
 }
 
 void NortekDvlRos::CallbackWT(
@@ -423,17 +423,14 @@ void NortekDvlRos::TrackToPC2(
     pc2_msg->header = track_msg->header;
 }
 
-void NortekDvlRos::TrackToRange(
+void NortekDvlRos::TrackToAltitude(
     const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
-    sensor_msgs::msg::Range::SharedPtr& range_msg) 
+    geometry_msgs::msg::PointStamped::SharedPtr& altitude_msg) 
 {
-    range_msg->header = track_msg->header;
-    range_msg->radiation_type = sensor_msgs::msg::Range::ULTRASOUND;
-    //! TODO: from Technical specifications, the altitude seems from 0.2~75m,
-    //        but from web interface, the max only can be set is 61.62m 
-    range_msg->min_range = 0.2;
-    range_msg->max_range = 75;
-    range_msg->range = track_msg->altitude;
+    altitude_msg->header = track_msg->header;
+    altitude_msg->point.x = 0;
+    altitude_msg->point.y = 0;
+    altitude_msg->point.z = track_msg->altitude;
 }
 
 void NortekDvlRos::ProfileToPressure(

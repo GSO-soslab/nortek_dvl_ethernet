@@ -32,9 +32,9 @@ roslaunch nortek_dvl_ethernet driver.launch
     - topic: "bt_pointcloud"
     - type: sensor_msgs::PointCloud2
     - info: the derived msg from raw bottom track data, it's from 4 range measurement
-- bottom track range
-    - topic: "bt_range"
-    - type: sensor_msgs::Range
+- bottom track altitude
+    - topic: "bt_altitude"
+    - type: sensor_msgs::PointStamped
     - info: the derived msg from raw bottom track data, it's simpled averaged from 4 range measurement
 - water track velocity
     - topic: "wt_velocity"

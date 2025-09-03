@@ -26,10 +26,10 @@
 #include <std_msgs/msg/float32.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/point_stamped.hpp>
 #include <sensor_msgs/msg/fluid_pressure.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
-#include <sensor_msgs/msg/range.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <nortek_msgs/msg/nortek_df2.hpp>
 #include <nortek_msgs/msg/nortek_df3.hpp>
@@ -77,9 +77,9 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr 
         bt_pc2_pub_;  
 
-    //! bottom track range (averaged from 4 beams) publisher
-    rclcpp::Publisher<sensor_msgs::msg::Range>::SharedPtr 
-        bt_range_pub_;  
+    //! bottom track altitude (altitude that averaged from 4 beams) publisher
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr 
+        bt_altitude_pub_;  
 
     //! water track 3-axis velocity publisher
     rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr 
@@ -229,15 +229,15 @@ private:
         sensor_msgs::msg::PointCloud2::SharedPtr& pc2_msg);
 
     /**
-     * @brief Convert DF21/DF22 data into range message
+     * @brief Convert DF21/DF22 data into altitude message
      * @param[in] track_msg the whole DF21/DF22 ROS message
-     * @param[out] range_msg the point cloud in sensor_msgs::Range 
+     * @param[out] altitude_msg the point cloud in sensor_msgs::PointStamped 
      * 
      * This is a roughly estimation, just simple averaged from 4 beam ranges
      */ 
-    void TrackToRange(
+    void TrackToAltitude(
         const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
-        sensor_msgs::msg::Range::SharedPtr& range_msg);
+        geometry_msgs::msg::PointStamped::SharedPtr& altitude_msg);
 
     /**
      * @brief Convert DF3 data into pressure message
