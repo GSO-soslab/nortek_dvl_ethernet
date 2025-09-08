@@ -291,7 +291,7 @@ void NortekDVLParser::ToDF2(
             altitude_sum += df2_msg->beam_dist[i];
         }
     }
-    df2_msg->altitude = altitude_sum / 4;
+    df2_msg->altitude = altitude_sum / df2_msg->good_beams;
 
     // setup speed ?
     df2_msg->speed_gnd  = sqrt(df2_msg->vel_x * df2_msg->vel_x + df2_msg->vel_y * df2_msg->vel_y);

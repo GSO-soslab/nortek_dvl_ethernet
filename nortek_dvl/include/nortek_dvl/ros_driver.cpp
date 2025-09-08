@@ -172,14 +172,6 @@ void NortekDvlRos::CallbackBT(
     bottom_track_pub_->publish(*track_msg);
 
     // ===================================================================== //
-    // publish twist message
-    // ===================================================================== //
-
-    auto twist_msg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
-    TrackToVelocity(track_msg, twist_msg);
-    bt_velocity_pub_->publish(*twist_msg);
-
-    // ===================================================================== //
     // publish pressure message
     // ===================================================================== //
 
@@ -195,9 +187,32 @@ void NortekDvlRos::CallbackBT(
     TrackToDepthOdom(track_msg, depth_odom_msg);
     depth_pub_->publish(*depth_odom_msg);
 
+    // RCLCPP_INFO(this->get_logger(), "good_beams: {%d}", track_msg->good_beams);
+    if(track_msg->good_beams ==0) {
+        return;
+    }
+
+    // ===================================================================== //
+    // publish twist message
+    // ===================================================================== //
+    // RCLCPP_INFO(this->get_logger(), "vel_x: {%f}", track_msg->vel_x);
+    // RCLCPP_INFO(this->get_logger(), "vel_y: {%f}", track_msg->vel_y);
+    // RCLCPP_INFO(this->get_logger(), "vel_z1: {%f}", track_msg->vel_z1);
+    // RCLCPP_INFO(this->get_logger(), "vel_z2: {%f}", track_msg->vel_z2);
+
+    std::shared_ptr<geometry_msgs::msg::TwistWithCovarianceStamped> twist_msg;
+    TrackToVelocity(track_msg, twist_msg);
+    if(twist_msg != nullptr) {
+        bt_velocity_pub_->publish(*twist_msg);
+    }
+
     // ===================================================================== //
     // publish pointcloud2 message
     // ===================================================================== //
+    // RCLCPP_INFO(this->get_logger(), "Dist Beam - 0: {%f}", track_msg->beam_dist[0]);
+    // RCLCPP_INFO(this->get_logger(), "Dist Beam - 1: {%f}", track_msg->beam_dist[1]);
+    // RCLCPP_INFO(this->get_logger(), "Dist Beam - 2: {%f}", track_msg->beam_dist[2]);
+    // RCLCPP_INFO(this->get_logger(), "Dist Beam - 3: {%f}", track_msg->beam_dist[3]);
 
     auto pc2_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
     TrackToPC2(track_msg, pc2_msg);
@@ -206,7 +221,6 @@ void NortekDvlRos::CallbackBT(
     // ===================================================================== //
     // publish altitude message
     // ===================================================================== //
-
     auto altitude_msg = std::make_shared<geometry_msgs::msg::PointStamped>();
     TrackToAltitude(track_msg, altitude_msg);
     bt_altitude_pub_->publish(*altitude_msg);
@@ -226,10 +240,15 @@ void NortekDvlRos::CallbackWT(
     // ===================================================================== //
     // publish twist message
     // ===================================================================== //
+    if(wt_msg->good_beams ==0) {
+        return;
+    }
 
-    auto twist_msg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
+    std::shared_ptr<geometry_msgs::msg::TwistWithCovarianceStamped> twist_msg;
     TrackToVelocity(wt_msg, twist_msg);
-    wt_velocity_pub_->publish(*twist_msg);
+    if(twist_msg != nullptr) {
+        wt_velocity_pub_->publish(*twist_msg);
+    }    
 }
 
 void NortekDvlRos::CallbackCP(
@@ -286,6 +305,15 @@ void NortekDvlRos::TrackToVelocity(
     const nortek_msgs::msg::NortekDF2::ConstSharedPtr& track_msg, 
     geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr& twist_msg) 
 {
+    if(track_msg->vel_x == -32.768f || 
+       track_msg->vel_y == -32.768f || 
+      (track_msg->vel_z1 == -32.768f && track_msg->vel_z2 != -32.768f))
+    {
+        return;
+    }
+
+    twist_msg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
+
     // prepare velocity and noise (FOM - measurement white noise level)
     double velocity_x, velocity_y, velocity_z, noise_x, noise_y, noise_z;
     velocity_x = track_msg->vel_x;
@@ -358,7 +386,7 @@ void NortekDvlRos::TrackToPC2(
     // ===================================================================== //
     pc2_msg->height = 1;
     // total points
-    pc2_msg->width = 4;
+    pc2_msg->width = track_msg->good_beams;
     // fill the field: x,y,z
     sensor_msgs::msg::PointField field;
     field.count = 1;
@@ -391,7 +419,12 @@ void NortekDvlRos::TrackToPC2(
     double beam_angle = beam_angle_ * M_PI/180;
 
     double beam_azimuth[] = {M_PI/4.0, -M_PI/4.0, -3.0*M_PI/4.0, 3.0*M_PI/4.0};
-    for (unsigned int i = 0; i < pc2_msg->width; i++) {
+    for (unsigned int i = 0; i < 4; i++) {
+        // skip the bad point
+        if (track_msg->beam_dist[i] == 0 ) {
+            continue;
+        }
+
         Eigen::Vector3d pt;
         pt(0) = 
             track_msg->beam_dist[i] * scale * tan(beam_angle) * cos(beam_azimuth[i]);
