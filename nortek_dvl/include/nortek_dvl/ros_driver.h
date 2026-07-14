@@ -107,6 +107,9 @@ private:
     //!  frame_id of pressure depth odometry
     std::string world_frame_id_;    
 
+    //!  child_frame_id of pressure depth odometry
+    std::string pressure_frame_id_;    
+
     //! fluid_density used for depth calulcation from pressure
     double fluid_density_;
 
