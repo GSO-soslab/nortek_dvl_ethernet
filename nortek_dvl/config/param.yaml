@@ -12,6 +12,10 @@ test/nortek_dvl_node:
       fluid_density: 1023.0
 
     ROS:
+      # frame id for twist msgs
       sensor_frame_id: "nortek_dvl"
+      ## header frame for depth odometr msg.
       world_frame_id: "world"
+      ## child frame for depth odometry msg.
+      pressure_frame_id: "nortek_dvl_pressure"
       depth_cov: 0.001

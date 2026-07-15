@@ -75,6 +75,12 @@ void NortekDvlRos::LoadParam()
     if (!this->get_parameter("ROS.sensor_frame_id", sensor_frame_id_)) {
         RCLCPP_ERROR(this->get_logger(), "ROS.sensor_frame_id: no param available!");
     }
+
+    this->declare_parameter<std::string>("ROS.pressure_frame_id", "nortek_dvl_pressure");
+    if (!this->get_parameter("ROS.pressure_frame_id", pressure_frame_id_)) {
+        RCLCPP_ERROR(this->get_logger(), "ROS.pressure_frame_id: no param available!");
+    }
+
     this->declare_parameter<std::string>("ROS.world_frame_id", "world");
     if (!this->get_parameter("ROS.world_frame_id", world_frame_id_)) {
         RCLCPP_ERROR(this->get_logger(), "ROS.world_frame_id: no param available!");
@@ -367,7 +373,7 @@ void NortekDvlRos::TrackToDepthOdom(
     // header
     depth_odom_msg->header.stamp = track_msg->header.stamp;
     depth_odom_msg->header.frame_id = world_frame_id_;
-    depth_odom_msg->child_frame_id = sensor_frame_id_;
+    depth_odom_msg->child_frame_id = pressure_frame_id_;
     // convert the pressure (Bar) to depth
     auto depth = (track_msg->pressure * 100000) / ( fluid_density_ * 9.81);
     // construct the odometry message
@@ -485,7 +491,7 @@ void NortekDvlRos::ProfileToDepthOdom(
     // header
     depth_odom_msg->header.stamp = profile_msg->header.stamp;
     depth_odom_msg->header.frame_id = world_frame_id_;
-    depth_odom_msg->child_frame_id = sensor_frame_id_;
+    depth_odom_msg->child_frame_id = pressure_frame_id_;
     // convert the pressure (Bar) to depth
     auto depth = (profile_msg->pressure * 100000) / ( fluid_density_ * 9.81);
     // construct the odometry message

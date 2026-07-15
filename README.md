@@ -4,46 +4,39 @@ It will publish the bottom track, water track and current profile data.
 ## Usage:
 ```sh
 cd ~/your_ws/src
-git clone -b noetic-devel https://github.com/GSO-soslab/nortek_dvl_ethernet
+git clone -b ros2-devel https://github.com/GSO-soslab/nortek_dvl_ethernet
 cd ~/your_ws
-catkin build nortek_dvl_ethernet
-roslaunch nortek_dvl_ethernet driver.launch
+colcon build --packages-select nortek_dvl_ethernet
+ros2 launch nortek_dvl_ethernet driver.launch.py
 ```
 
-## Introduction:
+## Published Topics
 
-- bottom track raw data 
-    - topic: "bottom_track"
-    - type: nortek_dvl_ethernet::NortekDF2
-    - info: DF21 data structure
-- water track raw data
-    - topic: "water_track"
-    - type: nortek_dvl_ethernet::NortekDF2
-    - info: DF22 data structure
-- current profile raw data
-    - topic: "current_profile"
-    - type: nortek_dvl_ethernet::NortekDF3
-    - info: DF3 data structure
-- bottom track velocity
-    - topic: "bt_velocity"
-    - type: geometry_msgs::TwistWithCovarianceStamped
-    - info: the derived msg from raw bottom track data, used for navigation
-- bottom track point cloud
-    - topic: "bt_pointcloud"
-    - type: sensor_msgs::PointCloud2
-    - info: the derived msg from raw bottom track data, it's from 4 range measurement
-- bottom track altitude
-    - topic: "bt_altitude"
-    - type: sensor_msgs::PointStamped
-    - info: the derived msg from raw bottom track data, it's simpled averaged from 4 range measurement
-- water track velocity
-    - topic: "wt_velocity"
-    - type: geometry_msgs::TwistWithCovarianceStamped
-    - info: the derived msg from raw water track data, used for navigation
-- pressure
-    - topic: "pressure"
-    - type: sensor_msgs::FluidPressure
-    - info: the derived msg from raw bottom track and current profile data, Nortek output the gauge pressure and unit in Bar. FluidPressure need absolute pressure unit in Pascal.
+| Topic | Type | Description |
+|-------|------|-------------|
+| `bottom_track` | `nortek_dvl_ethernet::NortekDF2` | Bottom track raw data (DF21) |
+| `water_track` | `nortek_dvl_ethernet::NortekDF2` | Water track raw data (DF22) |
+| `current_profile` | `nortek_dvl_ethernet::NortekDF3` | Current profile raw data (DF3) |
+| `bt_velocity` | `geometry_msgs::TwistWithCovarianceStamped` | Bottom track velocity for navigation |
+| `bt_pointcloud` | `sensor_msgs::PointCloud2` | Bottom track point cloud from 4 beams |
+| `bt_altitude` | `sensor_msgs::PointStamped` | Bottom track altitude (averaged from 4 beams) |
+| `wt_velocity` | `geometry_msgs::TwistWithCovarianceStamped` | Water track velocity for navigation |
+| `pressure` | `sensor_msgs::FluidPressure` | Pressure data (Bar to Pascal conversion) |
+
+## Configuration
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `udp_rx` | `9004` | UDP receive port |
+| `udp_address` | `192.168.2.110` | DVL IP address |
+| `buffer_size` | `512` | UDP buffer size |
+| `beam_angle` | `25.0` | DVL beam angle (degrees) |
+| `sound_speed` | `1500.0` | Sound speed (m/s) |
+| `fluid_density` | `1023.0` | Fluid density (kg/m³) |
+| `sensor_frame_id` | `nortek_dvl` | Frame ID for sensor messages |
+| `world_frame_id` | `world` | World frame ID for odometry |
+| `pressure_frame_id` | `nortek_dvl_pressure` | Frame ID for pressure sensor |
+| `depth_cov` | `0.001` | Depth covariance |
 
 ## Acknowledgment
 This package is inspired by [DVL driver](https://bitbucket.org/whoidsl/) from WHOI Deep Submergence Lab.
