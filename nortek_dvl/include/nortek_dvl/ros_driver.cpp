@@ -350,8 +350,8 @@ void NortekDvlRos::TrackToVelocity(
     twist_msg->twist.twist.linear.y = velocity_y * scale;
     twist_msg->twist.twist.linear.z = velocity_z * scale;
     twist_msg->twist.covariance[6 * 0 + 0] = noise_x * noise_x;
-    twist_msg->twist.covariance[6 * 1 + 1] = noise_y * noise_x;
-    twist_msg->twist.covariance[6 * 2 + 2] = noise_z * noise_x;
+    twist_msg->twist.covariance[6 * 1 + 1] = noise_y * noise_y;
+    twist_msg->twist.covariance[6 * 2 + 2] = noise_z * noise_z;
 }
 
 void NortekDvlRos::TrackToPressure(
